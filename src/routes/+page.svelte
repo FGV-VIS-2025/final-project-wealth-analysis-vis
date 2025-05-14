@@ -4,6 +4,7 @@
   import GenderChart from '$lib/components/GenderChart.svelte';
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
+  import { base } from '$app/paths';
 
   let allData = [];
   let ageData = [];
@@ -11,7 +12,8 @@
   let genderData = [];
 
   onMount(async () => {
-    const rawData = await d3.csv('/Billionaires Statistics Dataset.csv');
+    const csvPath = `${base}/Billionaires Statistics Dataset.csv`;
+    const rawData = await d3.csv(csvPath);
     
     allData = rawData.map(d => ({
       ...d,
