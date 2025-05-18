@@ -2,6 +2,7 @@
   import AgeHistogram from '$lib/components/AgeHistogram.svelte';
   import CountryBarChart from '$lib/components/CountryBarChart.svelte';
   import GenderChart from '$lib/components/GenderChart.svelte';
+  import SunburstChart from '$lib/components/SunburstChart.svelte';
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import { base } from '$app/paths';
@@ -10,6 +11,7 @@
   let ageData = [];
   let countryData = [];
   let genderData = [];
+  let sunburstData = [];
 
   onMount(async () => {
     const csvPath = `${base}/Billionaires Statistics Dataset.csv`;
@@ -33,6 +35,29 @@
     genderData = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
                    .map(([key, value]) => ({ gender: key || 'Unknown', count: value }));
   });
+
+  $: if (allData.length > 0) {
+    const continent_map = {
+      'United States': 'North America',
+      'China': 'Asia',
+      'India': 'Asia',
+      'Germany': 'Europe',
+      'France': 'Europe',
+      'United Kingdom': 'Europe',
+      'Russia': 'Europe',
+      'Brazil': 'South America',
+      'Canada': 'North America',
+      'Australia': 'Oceania'
+    };
+
+    sunburstData = allData.map(d => ({
+      Region: continent_map[d.country] || 'Other',
+      Country: d.country,
+      Industry: d.industries || d.industry || 'Unknown',
+      NetWorth: d.finalWorth
+    }));
+    console.log('sunburstData', sunburstData);
+  }
 
 </script>
 
@@ -101,6 +126,27 @@
         <GenderChart data={genderData} />
       {:else}
         <p>Loading gender data...</p>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Nova seção: Sunburst -->
+  <section class="story-section">
+    <div class="text-content left">
+      <h2>Distribuição Global do Patrimônio de Bilionários</h2>
+      <p>
+        O gráfico ao lado mostra como o patrimônio líquido dos bilionários está distribuído hierarquicamente por região, país e setor de atuação. 
+        Setores como tecnologia, manufatura e finanças concentram a maior parte da riqueza, especialmente em países como Estados Unidos e China, que oferecem ambientes favoráveis à inovação, acesso a capital e grandes mercados consumidores.
+      </p>
+      <p>
+        Essa visualização permite entender como fatores econômicos, geográficos e setoriais influenciam a concentração de riqueza global.
+      </p>
+    </div>
+    <div class="chart-content right">
+      {#if sunburstData.length > 0}
+        <SunburstChart data={sunburstData} />
+      {:else}
+        <p>Carregando dados do sunburst...</p>
       {/if}
     </div>
   </section>
