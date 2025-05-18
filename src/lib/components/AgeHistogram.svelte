@@ -104,9 +104,24 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    background: #f7fafc;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(44,62,80,0.07);
+    transition: box-shadow 0.2s;
+  }
+  .chart-container:hover {
+    box-shadow: 0 6px 24px rgba(44,62,80,0.13);
   }
   svg {
     max-width: 100%;
     max-height: 100%;
+    background: transparent;
+    border-radius: 12px;
+  }
+  @media (max-width: 600px) {
+    .chart-container {
+      height: 220px;
+      padding: 0;
+    }
   }
 </style> 

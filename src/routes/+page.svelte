@@ -107,55 +107,78 @@
 </div>
 
 <style>
+  :global(html) {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #f4f6fa;
+    color: #23272f;
+  }
+
   .story-container {
-    font-family: 'Arial', sans-serif;
-    color: #333;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 32px 16px;
   }
 
   .story-section {
     display: flex;
-    align-items: flex-start;
-    margin-bottom: 80px;
+    align-items: stretch;
+    margin-bottom: 56px;
     min-height: 400px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 40px;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(44,62,80,0.08), 0 1.5px 4px rgba(44,62,80,0.04);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+    border: 1px solid #e3e8ee;
+  }
+
+  .story-section:hover {
+    box-shadow: 0 8px 32px rgba(44,62,80,0.13), 0 2px 8px rgba(44,62,80,0.07);
   }
 
   .story-section:last-child {
     border-bottom: none;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
   }
 
   .text-content {
     flex: 1;
-    padding: 20px;
-    line-height: 1.6;
+    padding: 40px 32px;
+    line-height: 1.7;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .text-content h2 {
-    font-size: 2em;
+    font-size: 2.2em;
     color: #1a1a1a;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    font-weight: 700;
+    letter-spacing: -1px;
   }
   
   .text-content p {
-    font-size: 1.1em;
-    margin-bottom: 15px;
+    font-size: 1.13em;
+    margin-bottom: 14px;
+    color: #3a3a3a;
   }
 
   .chart-content {
     flex: 1;
-    padding: 20px;
+    padding: 32px 24px;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 300px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 320px;
+    background: linear-gradient(120deg, #f7fafc 60%, #e9f3ff 100%);
+    border-radius: 0 18px 18px 0;
+    box-shadow: none;
+    transition: background 0.3s;
+  }
+
+  .story-section:nth-child(even) .chart-content {
+    border-radius: 18px 0 0 18px;
   }
 
   .text-content.left {
@@ -169,5 +192,41 @@
   :global(.chart-content > *) {
     width: 100%;
     height: 100%;
+  }
+
+  @media (max-width: 900px) {
+    .story-section {
+      flex-direction: column;
+      min-height: unset;
+    }
+    .chart-content, .text-content {
+      padding: 24px 12px;
+    }
+    .chart-content {
+      border-radius: 0 0 18px 18px !important;
+      min-height: 220px;
+    }
+    .text-content {
+      border-radius: 18px 18px 0 0;
+      padding-bottom: 0;
+    }
+    .text-content.left, .text-content.right {
+      padding: 0 0 12px 0;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .story-container {
+      padding: 8px 2px;
+    }
+    .story-section {
+      margin-bottom: 24px;
+    }
+    .text-content h2 {
+      font-size: 1.3em;
+    }
+    .text-content p {
+      font-size: 1em;
+    }
   }
 </style>
