@@ -4,7 +4,7 @@
     export let data = [];
   
     let chartDiv;
-    let Plotly; // Não importa no topo!
+    let Plotly; 
   
     // Função para transformar os dados no formato do Plotly Sunburst
     function prepareSunburstData(data) {
