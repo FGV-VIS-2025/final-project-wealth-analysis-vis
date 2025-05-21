@@ -27,9 +27,32 @@
       errorMessage = '';
       vizInitialized = false;
       
+      // Limpar simulação anterior se existir
+      if (simulation) {
+        simulation.stop();
+        simulation = null;
+      }
+      
+      // Limpar dados anteriores
+      window.networkData = null;
+      
       // Load the data
       const csvPath = `${base}/Billionaires Statistics Dataset.csv`;
-      const data = await d3.csv(csvPath);
+      console.log("Carregando dados do CSV:", csvPath);
+      
+      const response = await fetch(csvPath);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const text = await response.text();
+      if (!text || text.trim().length === 0) {
+        throw new Error("Arquivo CSV vazio ou inválido");
+      }
+      
+      console.log(`CSV carregado com sucesso, tamanho: ${text.length} caracteres`);
+      
+      const data = d3.csvParse(text);
       
       if (!data || data.length === 0) {
         throw new Error("Não foi possível carregar os dados dos bilionários");
@@ -44,6 +67,8 @@
         d.gender &&
         d.finalWorth
       );
+      
+      console.log("Bilionários válidos:", validBillionaires.length);
       
       if (validBillionaires.length < 10) {
         throw new Error("Dados insuficientes para criar uma visualização em rede");
@@ -65,20 +90,60 @@
         age: +d.age || 0
       }));
       
-      // Create richer links based on multiple factors but be more selective
-      const links = createEnhancedLinks(nodes);
+      console.log("Nós criados:", nodes.length);
       
-      // Calculate communities
-      const communities = calculateAdvancedCommunities(nodes, links);
+      // Map industries to more general categories for better visualization
+      const industryCategories = {
+        "Technology": ["Software", "Hardware", "Technology", "Internet", "Computer", "E-commerce", "Social Media", "Online", "Tech"],
+        "Finance": ["Finance", "Investment", "Banking", "Hedge Fund", "Private Equity", "Financial Services", "Insurance", "Diversified"],
+        "Energy": ["Energy", "Oil", "Gas", "Coal", "Mining", "Petroleum"],
+        "Retail": ["Retail", "Fashion", "Clothing", "Consumer Goods", "Supermarket", "Discount Stores"],
+        "Real Estate": ["Real Estate", "Property", "Construction", "Building"],
+        "Manufacturing": ["Manufacturing", "Automotive", "Industrial", "Electronics", "Machinery"],
+        "Healthcare": ["Healthcare", "Pharmaceuticals", "Medical", "Biotech", "Health"],
+        "Media": ["Media", "Entertainment", "Broadcasting", "Publishing"],
+        "Food & Beverage": ["Food", "Beverage", "Restaurant", "Agriculture"],
+        "Telecom": ["Telecommunications", "Telecom", "Mobile"]
+      };
+      
+      // Assign primary industry category to each node
+      nodes.forEach(node => {
+        const categories = new Set();
+        
+        // Find matching categories for each industry
+        node.industries.forEach(industry => {
+          for (const [category, keywords] of Object.entries(industryCategories)) {
+            if (keywords.some(keyword => industry.includes(keyword))) {
+              categories.add(category);
+            }
+          }
+        });
+        
+        // If no categories found, use "Other"
+        node.mainCategories = categories.size > 0 ? Array.from(categories) : ["Other"];
+        // Set primary industry as the first in the list
+        node.primaryIndustry = node.mainCategories[0];
+      });
+      
+      // Create connections based on shared industries and countries
+      const links = createEnhancedLinks(nodes);
+      console.log("Links criados:", links.length);
       
       // Store the data in component state
-      window.networkData = { nodes, links, communities };
+      window.networkData = { 
+        nodes, 
+        links, 
+        industryCategories: Object.keys(industryCategories).concat(["Other"])
+      };
       
       isLoading = false;
       
       // If container is ready, create the visualization
       if (container) {
+        console.log("Container pronto, criando visualização");
         createVisualization();
+      } else {
+        console.log("Container não está pronto");
       }
       
     } catch (error) {
@@ -96,37 +161,6 @@
     const industryMap = new Map();
     const countryLinks = [];
     const countryMap = new Map();
-    
-    // Map industries to more general categories for better clustering
-    const industryCategories = {
-      "Technology": ["Software", "Hardware", "Technology", "Internet", "Computer", "E-commerce", "Social Media", "Online", "Tech"],
-      "Finance": ["Finance", "Investment", "Banking", "Hedge Fund", "Private Equity", "Financial Services", "Insurance", "Diversified"],
-      "Energy": ["Energy", "Oil", "Gas", "Coal", "Mining", "Petroleum"],
-      "Retail": ["Retail", "Fashion", "Clothing", "Consumer Goods", "Supermarket", "Discount Stores"],
-      "Real Estate": ["Real Estate", "Property", "Construction", "Building"],
-      "Manufacturing": ["Manufacturing", "Automotive", "Industrial", "Electronics", "Machinery"],
-      "Healthcare": ["Healthcare", "Pharmaceuticals", "Medical", "Biotech", "Health"],
-      "Media": ["Media", "Entertainment", "Broadcasting", "Publishing"],
-      "Food & Beverage": ["Food", "Beverage", "Restaurant", "Agriculture"],
-      "Telecom": ["Telecommunications", "Telecom", "Mobile"]
-    };
-    
-    // Assign main categories to each node
-    nodes.forEach(node => {
-      const categories = new Set();
-      
-      // Find matching categories for each industry
-      node.industries.forEach(industry => {
-        for (const [category, keywords] of Object.entries(industryCategories)) {
-          if (keywords.some(keyword => industry.includes(keyword))) {
-            categories.add(category);
-          }
-        }
-      });
-      
-      // If no categories found, use "Other"
-      node.mainCategories = categories.size > 0 ? Array.from(categories) : ["Other"];
-    });
     
     // Industry links (shared industries) - primary connections
     for (let i = 0; i < nodes.length; i++) {
@@ -189,129 +223,24 @@
     return allLinks;
   }
   
-  // Advanced community detection with better industry-based clustering
-  function calculateAdvancedCommunities(nodes, links) {
-    // First, try to group by main industry categories
-    const categoryClusters = {};
-    const mainCategories = [
-      "Technology", "Finance", "Energy", "Retail", 
-      "Real Estate", "Manufacturing", "Healthcare", 
-      "Media", "Food & Beverage", "Telecom", "Other"
-    ];
-    
-    // Initialize with category-based communities
-    mainCategories.forEach((category, index) => {
-      categoryClusters[category] = index;
-    });
-    
-    // First pass: assign nodes to communities based on their primary industry
-    const communities = nodes.map(node => {
-      // If node has multiple categories, pick the first one as primary
-      const primaryCategory = node.mainCategories[0] || "Other";
-      return categoryClusters[primaryCategory];
-    });
-    
-    // Second pass: optimize communities using network structure
-    const graph = Array(nodes.length).fill().map(() => []);
-    const weights = Array(nodes.length).fill().map(() => []);
-    
-    links.forEach(link => {
-      const { source, target, weight = 1, type } = link;
-      const sourceId = typeof source === 'object' ? source.id : source;
-      const targetId = typeof target === 'object' ? target.id : target;
-      
-      // Add edge weights based on link type
-      const edgeWeight = type === 'industry' ? weight * 2 : weight;
-      
-      graph[sourceId].push(targetId);
-      weights[sourceId].push(edgeWeight);
-      
-      graph[targetId].push(sourceId);
-      weights[targetId].push(edgeWeight);
-    });
-    
-    // Run community optimization iterations
-    let changed = true;
-    let iterations = 0;
-    
-    while (changed && iterations < 3) { // Fewer iterations to preserve industry categories
-      changed = false;
-      iterations++;
-      
-      for (let nodeId = 0; nodeId < nodes.length; nodeId++) {
-        // Count weighted connections to each community
-        const communityConnections = {};
-        
-        for (let i = 0; i < graph[nodeId].length; i++) {
-          const neighborId = graph[nodeId][i];
-          const communityId = communities[neighborId];
-          const weight = weights[nodeId][i];
-          
-          communityConnections[communityId] = (communityConnections[communityId] || 0) + weight;
-        }
-        
-        // Find best community
-        let bestCommunity = communities[nodeId];
-        let maxConnection = 0;
-        
-        for (const [communityId, weight] of Object.entries(communityConnections)) {
-          if (weight > maxConnection && communityId !== communities[nodeId].toString()) {
-            maxConnection = weight;
-            bestCommunity = parseInt(communityId);
-          }
-        }
-        
-        // Move to that community if it's better
-        if (bestCommunity !== communities[nodeId] && maxConnection > 0) {
-          communities[nodeId] = bestCommunity;
-          changed = true;
-        }
-      }
-    }
-    
-    // Get community to category mapping
-    const communityCategories = {};
-    
-    // Count categories in each community
-    communities.forEach((communityId, nodeId) => {
-      if (!communityCategories[communityId]) {
-        communityCategories[communityId] = {};
-      }
-      
-      const node = nodes[nodeId];
-      node.mainCategories.forEach(category => {
-        communityCategories[communityId][category] = 
-          (communityCategories[communityId][category] || 0) + 1;
-      });
-    });
-    
-    // Find dominant category for each community
-    const communityLabels = {};
-    Object.entries(communityCategories).forEach(([communityId, categories]) => {
-      const sortedCategories = Object.entries(categories)
-        .sort((a, b) => b[1] - a[1]);
-      
-      if (sortedCategories.length > 0) {
-        communityLabels[communityId] = sortedCategories[0][0];
-      } else {
-        communityLabels[communityId] = "Diversificado";
-      }
-    });
-    
-    // Store community labels in global object
-    window.communityLabels = communityLabels;
-    
-    return communities;
-  }
-  
   // Create the visualization
   function createVisualization() {
-    if (!container || !window.networkData) return;
-    
-    // Get data from window storage
-    const { nodes, links, communities } = window.networkData;
-    
     try {
+      if (!container || !window.networkData) {
+        console.log("Container ou dados não disponíveis");
+        return;
+      }
+      
+      // Get data from window storage
+      const { nodes, links, industryCategories } = window.networkData;
+      
+      if (!nodes || !links || !industryCategories) {
+        console.error("Dados incompletos");
+        hasError = true;
+        errorMessage = "Dados incompletos para criar a visualização.";
+        return;
+      }
+      
       // Clear any existing visualization
       d3.select(container).selectAll("*").remove();
       
@@ -319,6 +248,8 @@
       const rect = container.getBoundingClientRect();
       width = rect.width || 1000;
       height = rect.height || 600;
+      
+      console.log("Dimensões do container:", width, height);
       
       // Create SVG with clipping
       svg = d3.select(container)
@@ -342,11 +273,12 @@
       
       // Add zoom behavior
       const zoom = d3.zoom()
-        .scaleExtent([0.2, 8])
+        .scaleExtent([0.2, 6])
         .on("zoom", (event) => {
           g.attr("transform", event.transform);
         });
       
+      // Set initial zoom level to ensure everything is visible
       svg.call(zoom);
       
       // Define industry-based color palette with semantic colors
@@ -364,27 +296,45 @@
         "Other": "#a0a0a0" // Gray
       };
       
-      // Get community labels
-      const communityLabels = window.communityLabels || {};
-      
       // Create color scale based on industry colors
       const communityColor = d3.scaleOrdinal()
-        .domain(Object.keys(communityLabels))
-        .range(Object.keys(communityLabels).map(commId => {
-          const category = communityLabels[commId];
-          return industryColors[category] || "#a0a0a0";
-        }));
+        .domain(industryCategories)
+        .range(industryCategories.map(category => industryColors[category] || "#a0a0a0"));
                 
       const linkColor = d3.scaleOrdinal()
         .domain(['industry', 'country'])
         .range(['#aaa', '#ccc']);
       
-      // Prepare node data with communities
-      const nodeData = nodes.map((node, i) => ({
-        ...node,
-        community: communities[i],
-        communityLabel: communityLabels[communities[i]] || "Diversificado"
-      }));
+      // Prepare node data with positions more evenly distributed initially
+      const nodeData = nodes.map((node, i) => {
+        // Create initial positions in a circle pattern for better distribution
+        const angle = (i / nodes.length) * 2 * Math.PI;
+        const radius = Math.min(width, height) * 0.4;
+        
+        return {
+          ...node,
+          x: width/2 + radius * Math.cos(angle),
+          y: height/2 + radius * Math.sin(angle),
+          community: node.primaryIndustry,
+          communityLabel: node.primaryIndustry
+        };
+      });
+      
+      // Create force simulation first
+      simulation = d3.forceSimulation(nodeData)
+        .force("link", d3.forceLink(links)
+          .id(d => d.id)
+          .distance(d => 60 / Math.max(d.weight, 0.3)))
+        .force("charge", d3.forceManyBody()
+          .strength(d => -60 - d.worth/8000))
+        .force("center", d3.forceCenter(width/2, height/2))
+        .force("x", d3.forceX(width/2).strength(0.05))
+        .force("y", d3.forceY(height/2).strength(0.05))
+        .force("collision", d3.forceCollide()
+          .radius(d => Math.sqrt(d.worth/2000) + 6))
+        .force("cluster", forceCluster(nodeData.map(d => d.primaryIndustry)))
+        .alphaDecay(0.02)  // Slower decay for better settling
+        .velocityDecay(0.3);  // Smoother movement
       
       // Create link elements with thinner, more subtle styling
       const link = g.append("g")
@@ -395,13 +345,32 @@
         .attr("stroke", d => linkColor(d.type))
         .attr("stroke-width", d => Math.sqrt(d.weight) * 0.7);
       
+      // Calculate connection count for each node
+      const connectionCounts = {};
+      
+      // Initialize counts
+      nodes.forEach(node => {
+        connectionCounts[node.id] = 0;
+      });
+      
+      // Count connections from links
+      links.forEach(link => {
+        connectionCounts[link.source.id] = (connectionCounts[link.source.id] || 0) + 1;
+        connectionCounts[link.target.id] = (connectionCounts[link.target.id] || 0) + 1;
+      });
+      
+      // Store connection count on each node
+      nodeData.forEach(node => {
+        node.connectionCount = connectionCounts[node.id] || 0;
+      });
+      
       // Create node elements with cleaner styling
       const node = g.append("g")
         .selectAll("circle")
         .data(nodeData)
         .join("circle")
-        .attr("r", d => 4 + Math.sqrt(d.worth/2000))
-        .attr("fill", d => communityColor(d.community))
+        .attr("r", d => 4 + Math.sqrt(d.connectionCount) * 1.5) // Size based on connections
+        .attr("fill", d => communityColor(d.primaryIndustry))
         .attr("stroke", d => {
           if (d.gender === "M") return "#4682B4";
           if (d.gender === "F") return "#DB7093";
@@ -410,11 +379,38 @@
         .attr("stroke-width", 1.5)
         .attr("stroke-opacity", 0.7);
       
+      // Update positions on tick - set this before other interactions
+      simulation.on("tick", () => {
+        link
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+        
+        node
+          .attr("cx", d => d.x)
+          .attr("cy", d => d.y);
+        
+        // Update label positions
+        if (labelGroup) {
+          labelGroup.selectAll("text")
+            .attr("x", d => d.x + 10);
+          
+          labelGroup.selectAll("rect")
+            .attr("x", d => d.x + 8);
+        }
+          
+        // Update rank number positions
+        g.selectAll("text.rank")
+          .attr("x", d => d.x)
+          .attr("y", d => d.y + 3);
+      });
+      
       // Add tooltips to nodes with more industry information
       node.append("title")
         .text(d => {
           const industries = d.industries.join(", ");
-          return `${d.name}\nRiqueza: $${d.worth.toLocaleString()} milhões\nCluster: ${d.communityLabel}\nIndústrias: ${industries}\nPaís: ${d.country}`;
+          return `${d.name}\nRiqueza: $${d.worth.toLocaleString()} milhões\nConexões: ${d.connectionCount}\nIndústria: ${d.primaryIndustry}\nIndústrias: ${industries}\nPaís: ${d.country}`;
         });
       
       // Label top 15 richest billionaires
@@ -426,30 +422,6 @@
       const labelGroup = g.append("g")
         .attr("class", "billionaire-labels");
       
-      // Add a background rectangle for better readability
-      labelGroup.selectAll("rect")
-        .data(topRichest)
-        .join("rect")
-        .attr("x", d => d.x + 8)
-        .attr("y", d => d.y - 7)
-        .attr("rx", 3)
-        .attr("ry", 3)
-        .attr("width", d => Math.max(d.name.length * 5.5, 50))
-        .attr("height", 14)
-        .attr("fill", "white")
-        .attr("opacity", 0.7);
-        
-      // Add the actual text labels
-      labelGroup.selectAll("text")
-        .data(topRichest)
-        .join("text")
-        .attr("x", d => d.x + 10)
-        .attr("y", d => d.y + 3)
-        .text(d => d.name)
-        .attr("font-size", 10)
-        .attr("font-weight", "bold")
-        .attr("pointer-events", "none")
-        .attr("fill", "#333");
       
       // Add rank number next to each node (inside the circle)
       g.append("g")
@@ -466,10 +438,21 @@
         .attr("pointer-events", "none")
         .attr("fill", "white");
       
+      // Function to auto-fit the graph
+      function autoFitGraph() {
+        // Initialize at a better view for visibility
+        const initialTransform = d3.zoomIdentity
+          .translate(width/2, height/2)
+          .scale(0.9)
+          .translate(-width/2, -height/2);
+        
+        svg.call(zoom.transform, initialTransform);
+      }
+      
       // Add drag behavior
       node.call(d3.drag()
         .on("start", (event, d) => {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
+          if (!event.active && simulation) simulation.alphaTarget(0.3).restart();
           d.fx = d.x;
           d.fy = d.y;
         })
@@ -478,7 +461,7 @@
           d.fy = event.y;
         })
         .on("end", (event, d) => {
-          if (!event.active) simulation.alphaTarget(0);
+          if (!event.active && simulation) simulation.alphaTarget(0);
           d.fx = null;
           d.fy = null;
         }));
@@ -505,12 +488,12 @@
             (l.target.id === selectedNode && l.source.id === nd.id)
           );
           
-          // Same cluster
-          const isSameCluster = nd.community === nodeData[selectedNode].community;
+          // Same industry
+          const isSameIndustry = nd.primaryIndustry === nodeData[selectedNode].primaryIndustry;
           
           return nd.id === selectedNode ? 1 : 
                  isConnected ? 0.8 : 
-                 isSameCluster ? 0.5 : 0.15;
+                 isSameIndustry ? 0.5 : 0.15;
         });
         
         link.attr("opacity", l => {
@@ -542,51 +525,14 @@
         labelGroup.selectAll("rect").attr("opacity", 0.7);
       });
       
-      // Create force simulation with more refined parameters
-      simulation = d3.forceSimulation(nodeData)
-        .force("link", d3.forceLink(links)
-          .id(d => d.id)
-          .distance(d => 80 / Math.max(d.weight, 0.3)))
-        .force("charge", d3.forceManyBody()
-          .strength(d => -50 - d.worth/10000))
-        .force("center", d3.forceCenter(width/2, height/2))
-        .force("x", d3.forceX(width/2).strength(0.03))
-        .force("y", d3.forceY(height/2).strength(0.03))
-        .force("collision", d3.forceCollide()
-          .radius(d => Math.sqrt(d.worth/2000) + 8))
-        // Add cluster-based forces to keep clusters more visually separated
-        .force("cluster", forceCluster(communities));
+      // Call autoFit when ready
+      autoFitGraph();
       
       // Add minimal, clean legend
-      addLegend(svg, communityColor, linkColor, communityLabels);
+      addLegend(svg, communityColor, linkColor, industryCategories);
       
       // Add the richest billionaires table
       addRichestTable(svg, topRichest, communityColor);
-      
-      // Update positions on tick
-      simulation.on("tick", () => {
-        link
-          .attr("x1", d => d.source.x)
-          .attr("y1", d => d.source.y)
-          .attr("x2", d => d.target.x)
-          .attr("y2", d => d.target.y);
-        
-        node
-          .attr("cx", d => d.x)
-          .attr("cy", d => d.y);
-        
-        // Update label positions
-        labelGroup.selectAll("text")
-          .attr("x", d => d.x + 10);
-        
-        labelGroup.selectAll("rect")
-          .attr("x", d => d.x + 8);
-          
-        // Update rank number positions
-        g.selectAll("text.rank")
-          .attr("x", d => d.x)
-          .attr("y", d => d.y + 3);
-      });
       
       vizInitialized = true;
       
@@ -597,45 +543,68 @@
     }
   }
   
-  // Custom force to separate clusters
-  function forceCluster(communities) {
-    const strength = 0.15;
+  // Custom force to separate by industry
+  function forceCluster(industries) {
+    const strength = 0.18;
     let nodes;
     
-    // Calculate cluster centers
+    // Calculate industry centers with better distribution
     function getCenters() {
       const centers = {};
       const centerStrength = {};
       
-      // Group nodes by community
-      nodes.forEach(node => {
-        const community = communities[node.index];
-        if (!centers[community]) {
-          centers[community] = { x: 0, y: 0 };
-          centerStrength[community] = 0;
+      // Group nodes by industry
+      nodes.forEach((node, index) => {
+        const industry = industries[index];
+        if (!centers[industry]) {
+          centers[industry] = { x: 0, y: 0 };
+          centerStrength[industry] = 0;
         }
         
-        centers[community].x += node.x;
-        centers[community].y += node.y;
-        centerStrength[community]++;
+        centers[industry].x += node.x;
+        centers[industry].y += node.y;
+        centerStrength[industry]++;
       });
       
-      // Calculate the average position for each community
-      Object.keys(centers).forEach(community => {
-        centers[community].x /= centerStrength[community];
-        centers[community].y /= centerStrength[community];
+      // Calculate the average position for each industry
+      Object.keys(centers).forEach(industry => {
+        centers[industry].x /= centerStrength[industry];
+        centers[industry].y /= centerStrength[industry];
       });
+      
+      // Spread centers more evenly if they are too close to each other
+      const minDistance = 100; // Minimum distance between centers
+      const allCentersList = Object.values(centers);
+      
+      for (let i = 0; i < allCentersList.length; i++) {
+        for (let j = i + 1; j < allCentersList.length; j++) {
+          const c1 = allCentersList[i];
+          const c2 = allCentersList[j];
+          
+          const dx = c2.x - c1.x;
+          const dy = c2.y - c1.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < minDistance) {
+            const factor = (minDistance - distance) / distance * 0.5;
+            c1.x -= dx * factor;
+            c1.y -= dy * factor;
+            c2.x += dx * factor;
+            c2.y += dy * factor;
+          }
+        }
+      }
       
       return centers;
     }
     
     function force(alpha) {
-      const clusterCenters = getCenters();
+      const industryCenters = getCenters();
       
-      // Apply force toward the center of each node's community
-      nodes.forEach(node => {
-        const community = communities[node.index];
-        const center = clusterCenters[community];
+      // Apply force toward the center of each node's industry
+      nodes.forEach((node, index) => {
+        const industry = industries[index];
+        const center = industryCenters[industry];
         
         if (center) {
           node.vx += (center.x - node.x) * alpha * strength;
@@ -721,7 +690,7 @@
       .attr("cx", 15)
       .attr("cy", -0)
       .attr("r", 5)
-      .attr("fill", d => colorScale(d.community))
+      .attr("fill", d => colorScale(d.primaryIndustry))
       .attr("stroke", "white")
       .attr("stroke-width", 1);
     
@@ -752,19 +721,14 @@
         return `$${billions.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})}B`;
       });
     
-    // Add small country flags or industry labels
+    // Add small industry labels
     rows.append("text")
       .attr("x", tableWidth - 80)
       .attr("y", 0)
       .attr("text-anchor", "end")
       .attr("font-size", "9px")
       .attr("fill", "#666")
-      .text(d => {
-        if (d.mainCategories && d.mainCategories.length > 0) {
-          return d.mainCategories[0];
-        }
-        return "";
-      });
+      .text(d => d.primaryIndustry || "");
     
     // Add toggle button to hide/show the table
     const toggleBtn = svg.append("g")
@@ -804,21 +768,17 @@
     // Add tooltips to the circles showing industry details
     rows.select("circle").append("title")
       .text(d => {
-        if (d.communityLabel) {
-          return `Cluster: ${d.communityLabel}\nIndústrias: ${d.industries.join(", ")}`;
-        }
-        return `Indústrias: ${d.industries.join(", ")}`;
+        return `Indústria: ${d.primaryIndustry}\nIndústrias: ${d.industries.join(", ")}`;
       });
   }
   
   // Add legend to visualization - minimalist version
-  function addLegend(svg, colorScale, linkColorScale, communityLabels) {
+  function addLegend(svg, colorScale, linkColorScale, industryCategories) {
     const legendWidth = 160;
     const legendX = width - legendWidth - 10;
     
-    // Get all unique cluster labels
-    const clusterLabels = Object.values(communityLabels);
-    const uniqueLabels = [...new Set(clusterLabels)];
+    // Get all unique industry categories
+    const uniqueLabels = industryCategories;
     
     // Calculate required height for all labels
     const legendHeight = 70 + (uniqueLabels.length * 18);
@@ -844,20 +804,16 @@
       .attr("font-weight", "bold")
       .attr("y", 0)
       .attr("font-size", "0.8em")
-      .text("Clusters por Indústria");
+      .text("Indústrias");
     
-    // Add industry clusters color legend
+    // Add industry color legend
     uniqueLabels.forEach((label, i) => {
       const g = legend.append("g")
         .attr("transform", `translate(0, ${i * 18 + 20})`);
       
       g.append("circle")
         .attr("r", 5)
-        .attr("fill", () => {
-          // Find community ID for this label
-          const commId = Object.keys(communityLabels).find(id => communityLabels[id] === label);
-          return colorScale(commId);
-        });
+        .attr("fill", colorScale(label));
       
       g.append("text")
         .attr("x", 12)
@@ -947,7 +903,7 @@
   <section class="hero">
     <div class="hero-content">
       <h1 in:fly="{{ y: 20, duration: 800, delay: 200 }}">Rede de Bilionários por Indústria</h1>
-      <p in:fly="{{ y: 20, duration: 800, delay: 400 }}">Explorando os clusters industriais e as conexões entre bilionários globais</p>
+      <p in:fly="{{ y: 20, duration: 800, delay: 400 }}">Explorando as indústrias e as conexões entre bilionários globais</p>
     </div>
   </section>
 
@@ -960,15 +916,15 @@
       <div class="card-content">
         <div class="info-columns">
           <div class="info-column">
-            <h4>Clusters (Grupos Coloridos)</h4>
-            <p>Cada cor representa um <strong>cluster</strong> ou comunidade de bilionários que:</p>
+            <h4>Cores (Grupos por Indústria)</h4>
+            <p>Cada cor representa uma <strong>indústria</strong> ou setor em que os bilionários atuam:</p>
             <ul>
-              <li>Compartilham conexões semelhantes na rede</li>
-              <li>Têm maior probabilidade de estar no mesmo ecossistema econômico</li>
-              <li>São identificados algoritmicamente com base nos padrões de conexão, não apenas na indústria declarada</li>
+              <li>As cores são atribuídas com base no setor principal de cada bilionário</li>
+              <li>Bilionários da mesma indústria tendem a estar mais próximos na visualização</li>
+              <li>Alguns bilionários atuam em múltiplos setores, mas são coloridos pelo principal</li>
             </ul>
             <div class="info-note">
-              <strong>Nota:</strong> Um bilionário listado como "Retail" pode aparecer no cluster "Technology" se tiver mais conexões com bilionários da tecnologia.
+              <strong>Nota:</strong> As cores são baseadas na indústria principal identificada para cada bilionário, considerando as diversas categorias em que atua.
             </div>
           </div>
           <div class="info-column">
@@ -978,7 +934,7 @@
               <li><strong>Conexões por indústria:</strong> Linhas mais escuras representam bilionários que compartilham setores ou categorias industriais semelhantes</li>
               <li><strong>Conexões por país:</strong> Linhas mais claras conectam bilionários do mesmo país</li>
             </ul>
-            <p>A estrutura da rede revela como a riqueza global está interconectada e quais bilionários servem como "pontes" entre diferentes indústrias.</p>
+            <p>A estrutura da rede revela como a riqueza global está interconectada entre países e indústrias.</p>
           </div>
         </div>
       </div>
@@ -1004,7 +960,17 @@
           <div class="error-container">
             <div class="error-icon">⚠️</div>
             <p>Erro ao carregar os dados: {errorMessage}</p>
-            <button class="action-button" on:click={() => loadData()}>
+            <p>Tente recarregar a página ou verifique se o arquivo de dados está disponível.</p>
+            <button class="action-button" on:click={() => {
+              // Limpar o estado e forçar recarregamento
+              if (simulation) {
+                simulation.stop();
+                simulation = null;
+              }
+              window.networkData = null;
+              d3.select(container).selectAll("*").remove();
+              loadData();
+            }}>
               <span class="button-icon">🔄</span> Tentar novamente
             </button>
           </div>
@@ -1019,15 +985,15 @@
             Cada círculo representa um bilionário, e as conexões mostram relações por:
           </p>
           <ul>
-            <li><strong>Cores:</strong> Representam clusters de bilionários em ecossistemas econômicos similares</li>
-            <li><strong>Tamanho:</strong> Representa o patrimônio líquido do bilionário</li>
+            <li><strong>Cores:</strong> Representam diferentes indústrias em que os bilionários atuam</li>
+            <li><strong>Tamanho:</strong> Representa o número de conexões que o bilionário possui</li>
             <li><strong>Conexões:</strong> Bilionários conectados por indústrias compartilhadas ou localização geográfica</li>
           </ul>
           
           <div class="insight-box">
             <div class="insight-icon">💡</div>
             <div class="insight-content">
-              <p>Esta visualização revela padrões inesperados: bilionários de indústrias tradicionalmente diferentes frequentemente se agrupam no mesmo cluster devido a investimentos diversificados e conexões de negócios que transcendem categorias industriais tradicionais.</p>
+              <p>Esta visualização revela padrões interessantes: muitos bilionários atuam em múltiplos setores e indústrias, mantendo conexões com outros setores mesmo quando sua principal área de negócios é diferente.</p>
             </div>
           </div>
         </div>
