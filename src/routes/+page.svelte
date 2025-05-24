@@ -5,6 +5,7 @@
   import GenderChart from '$lib/components/GenderChart.svelte';
   import SunburstChart from '$lib/components/SunburstChart.svelte';
   import BillionaireSearch from '$lib/components/BillionaireSearch.svelte';
+  import SelfMadePieChart from '$lib/components/SelfMadePieChart.svelte';
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import { base } from '$app/paths';
@@ -84,6 +85,10 @@
     }
   }
 
+  function processSelfMadeData(data) {
+    return data.filter(d => d.selfMade !== undefined);
+  }
+
   onMount(() => {
     loadData();
   });
@@ -157,6 +162,35 @@
                 <p>A concentração em certos setores, como tecnologia, reflete o potencial de escalabilidade e margens de lucro desses negócios, bem como a valorização diferenciada que os mercados atribuem a empresas inovadoras com alto potencial de crescimento.</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="visualization-card">
+        <div class="card-header">
+          <div class="section-icon small">👨‍💼</div>
+          <h3>Origem da Fortuna: Self-Made vs Herdeiros</h3>
+        </div>
+        <div class="card-content">
+          <div class="text-area">
+            <p>
+              Este gráfico mostra a distribuição entre bilionários que construíram suas próprias fortunas (self-made) 
+              e aqueles que herdaram suas riquezas. A análise revela padrões interessantes sobre a mobilidade 
+              econômica e a criação de riqueza em diferentes contextos.
+            </p>
+            <div class="insight-box">
+              <div class="insight-icon">💡</div>
+              <div class="insight-content">
+                <p>A proporção entre self-made e herdeiros pode indicar o nível de oportunidades econômicas e a facilidade de criar novas fortunas em diferentes períodos e regiões.</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-area">
+            {#if allData.length > 0}
+              <SelfMadePieChart data={allData} />
+            {:else}
+              <p class="no-data">Dados indisponíveis</p>
+            {/if}
           </div>
         </div>
       </div>
