@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import Plotly from 'plotly.js-dist-min';
+  let Plotly;
   export let nodes = [];
   export let links = [];
   export let linkColors = [];
@@ -75,7 +75,8 @@
     };
   }
 
-  onMount(() => {
+  onMount(async () => {
+    Plotly = (await import('plotly.js-dist-min')).default;
     if (chartDiv && nodes.length && links.length) {
       Plotly.newPlot(chartDiv, [{ ...getSankeyData() }], getLayout(), { responsive: true });
     }
