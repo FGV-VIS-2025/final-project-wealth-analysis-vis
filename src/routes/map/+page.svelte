@@ -565,6 +565,7 @@
       <a href="{base}/gender-gap" class="nav-link">Gap de Gênero</a>
       <a href="{base}/map" class="nav-link active">Mapa de Migração</a>
       <a href="{base}/network" class="nav-link">Rede de Indústrias</a>
+      <a href="{base}/ascensao" class="nav-link">Trajetórias da Fortuna</a>
     </div>
   </nav>
 
