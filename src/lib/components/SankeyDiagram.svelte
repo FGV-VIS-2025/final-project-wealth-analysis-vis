@@ -82,17 +82,22 @@
     }
   });
 
-  // Atualiza o gráfico se os dados mudarem
-  $: if (chartDiv && nodes.length && links.length) {
+  $: if (Plotly && chartDiv && nodes.length && links.length) {
     Plotly.react(chartDiv, [{ ...getSankeyData() }], getLayout(), { responsive: true });
   }
 
   onDestroy(() => {
-    if (chartDiv) Plotly.purge(chartDiv);
+    if (chartDiv && Plotly) Plotly.purge(chartDiv);
   });
 
   // Expor labels para uso externo
   export let labels = nodes.map(n => n.name);
 </script>
 
-<div bind:this={chartDiv} style="width: 100%; min-width: 320px; min-height: 500px; position: relative;"></div> 
+<div bind:this={chartDiv} style="width: 100%; min-width: 320px; min-height: 500px; position: relative;"></div>
+
+<style>
+  .pointer-none {
+    pointer-events: none;
+  }
+</style> 

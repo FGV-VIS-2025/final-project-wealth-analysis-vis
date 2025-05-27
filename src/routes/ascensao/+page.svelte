@@ -465,7 +465,7 @@
         </div>
       {/if}
       {#if !isLoading && !loadingError && sankeyNodes.length > 0 && sankeyLinks.length > 0}
-        <div style="margin: 32px 32px 0 32px; position: relative; padding-bottom: 48px;">
+        <div style="margin: 32px 32px 0 32px; position: relative; padding-bottom: 48px;" class:pointer-none={origemDropdownAberto || paisDropdownAberto || setorDropdownAberto}>
           <SankeyDiagram nodes={sankeyNodes} links={sankeyLinks} linkColors={sankeyLinkColors} />
           <div class="sankey-column-labels" style="position: absolute; left: 0; width: 100%; bottom: -32px; pointer-events: none; z-index: 2; display: flex; justify-content: space-between;">
             <span style="flex: 1; text-align: left; color: #1976d2; font-weight: 600;">Origem</span>
@@ -516,5 +516,8 @@
     border-radius: 6px;
     color: #1976d2;
     font-weight: bold;
+  }
+  .pointer-none {
+    pointer-events: none;
   }
 </style> 
