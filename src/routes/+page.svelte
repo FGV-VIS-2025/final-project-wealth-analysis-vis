@@ -40,6 +40,17 @@
   <title>Billionaires Data Story</title>
 </svelte:head>
 
+<!-- Navegação simples -->
+<nav style="padding: 20px; border-bottom: 1px solid #eee; margin-bottom: 20px;">
+  <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+    <h1 style="margin: 0; color: #333;">Análise Global de Bilionários</h1>
+    <div style="display: flex; gap: 20px;">
+      <a href="{base}/" style="text-decoration: none; color: #007bff; font-weight: bold;">Visão Geral</a>
+      <a href="{base}/trajetoria" style="text-decoration: none; color: #666;">Trajetória</a>
+    </div>
+  </div>
+</nav>
+
 <div class="story-container">
   <section class="story-section">
     <div class="text-content left">
