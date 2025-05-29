@@ -1,0 +1,186 @@
+body {
+  margin: 0;
+}
+
+body:has(.story-container) {
+  background-color: #121212;
+  color: #e0e0e0;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
+}
+
+#trajetoria-page-container.fading-out,
+#scroll-telling-page.fading-out {
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+
+.story-container {
+  font-family: 'Arial', sans-serif; 
+  max-width: 100%;
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth; 
+}
+
+.story-container .story-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  scroll-snap-align: start;
+  width: 100%;
+  box-sizing: border-box;
+  opacity: 0; 
+  transition: opacity 1.1s ease-in-out;
+}
+
+.story-container .story-section.active {
+  opacity: 1;
+}
+
+#scroll-telling-page .story-section {
+    padding: 20px; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#scroll-telling-page .full-page-section { 
+  text-align: center;
+}
+
+#scroll-telling-page .text-content {
+  flex: 1;
+  line-height: 1.6;
+  max-width: 800px;
+  width: 100%;
+}
+
+#scroll-telling-page .story-section.side-by-side {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+}
+
+#scroll-telling-page .story-section.side-by-side .text-content,
+#scroll-telling-page .story-section.side-by-side .chart-content {
+    flex: 1;
+    padding: 20px;
+    height: auto;
+}
+
+#scroll-telling-page .text-content h2 {
+  font-size: 2em;
+  color: #f5f5f5;
+  margin-bottom: 20px;
+}
+
+#scroll-telling-page .text-content p {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+}
+
+#scroll-telling-page .chart-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  width: 100%;
+  max-height: 80vh;
+}
+
+#scroll-telling-page .text-content.left {
+  padding-right: 40px;
+}
+
+#scroll-telling-page .text-content.right {
+  padding-left: 40px;
+}
+
+:global(#scroll-telling-page .chart-content > *) {
+  width: 100%;
+  height: 100%;
+}
+
+#scroll-telling-page .loading-text {
+  color: #e0e0e0;
+  text-align: center;
+}
+
+#scroll-telling-page .centered-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%; 
+}
+
+#scroll-telling-page .nav-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #e0e0e0;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 40px;
+}
+
+#scroll-telling-page .nav-button-text {
+  font-size: 1.1em;
+  color: #e0e0e0;
+  margin-bottom: 20px;
+  text-align: center;
+  max-width: 600px;
+}
+
+#scroll-telling-page .nav-arrow-button {
+  background-color: #ffd700;
+  color: #121212;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#scroll-telling-page .nav-arrow-button:hover {
+  background-color: #e6c300;
+  transform: scale(1.1);
+}
+
+#scroll-telling-page .story-section:has(.nav-button-container) .centered-content {
+    justify-content: center;
+}
+
+
+:global(.chart-content > *) {
+  width: 100%;
+  height: 100%;
+}
+
+.loading-text {
+  color: #e0e0e0;
+  text-align: center;
+}
+
+.centered-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%; 
+} 

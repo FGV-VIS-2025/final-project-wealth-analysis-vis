@@ -27,7 +27,9 @@
       .padding(0.1);
 
     svg.append('g')
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y))
+      .selectAll('text')
+        .style('fill', '#e0e0e0');
 
     const x = d3.scaleLinear()
       .domain([0, d3.max(data, d => d.count) || 10])
@@ -37,8 +39,9 @@
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x))
       .selectAll('text')
-      .attr('transform', 'translate(-10,0)rotate(-45)')
-      .style('text-anchor', 'end');
+        .attr('transform', 'translate(-10,0)rotate(-45)')
+        .style('text-anchor', 'end')
+        .style('fill', '#e0e0e0');
 
     svg.selectAll('rect')
       .data(data)
@@ -47,20 +50,22 @@
       .attr('x', 0) 
       .attr('height', y.bandwidth())
       .attr('width', d => x(d.count))
-      .attr('fill', '#4CAF50');
+      .attr('fill', '#ffd700');
 
     svg.append('text')
         .attr('text-anchor', 'middle')
         .attr('x', innerWidth / 2)
         .attr('y', innerHeight + margin.bottom - 30)
-        .text('Number of Billionaires');
+        .text('Number of Billionaires')
+        .style('fill', '#e0e0e0');
 
     svg.append('text')
         .attr('text-anchor', 'middle')
         .attr('transform', 'rotate(-90)')
-        .attr('y', -margin.left + 50) 
+        .attr('y', -margin.left + 50)
         .attr('x', -innerHeight / 2)
-        .text('Country');
+        .text('Country')
+        .style('fill', '#e0e0e0');
   }
   
   onMount(() => {

@@ -30,14 +30,17 @@
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x))
       .selectAll('text')
-      .style('text-anchor', 'middle'); 
+        .style('text-anchor', 'middle')
+        .style('fill', '#e0e0e0');
 
     const y = d3.scaleLinear()
       .domain([0, d3.max(data, d => d.count) || 10])
       .range([innerHeight, 0]);
 
     svg.append('g')
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y))
+      .selectAll('text')
+        .style('fill', '#e0e0e0');
 
     svg.selectAll('rect')
       .data(data)
@@ -46,20 +49,26 @@
       .attr('y', d => y(d.count))
       .attr('width', x.bandwidth())
       .attr('height', d => innerHeight - y(d.count))
-      .attr('fill', '#ff6384');
+      .attr('fill', d => {
+        if (d.gender === 'M') return '#2563eb'; // Blue for Male
+        if (d.gender === 'F') return '#dc2626'; // Red for Female
+        return '#6b7280'; // Default color for 'Unknown' or other
+      });
 
     svg.append('text')
         .attr('text-anchor', 'middle')
         .attr('x', innerWidth / 2)
-        .attr('y', innerHeight + margin.bottom - 20) 
-        .text('Gender');
+        .attr('y', innerHeight + margin.bottom - 20)
+        .text('Gender')
+        .style('fill', '#e0e0e0');
 
     svg.append('text')
         .attr('text-anchor', 'middle')
         .attr('transform', 'rotate(-90)')
         .attr('y', -margin.left + 20)
         .attr('x', -innerHeight / 2)
-        .text('Number of Billionaires');
+        .text('Number of Billionaires')
+        .style('fill', '#e0e0e0');
   }
 
   onMount(() => {
