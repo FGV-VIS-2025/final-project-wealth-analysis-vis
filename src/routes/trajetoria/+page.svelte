@@ -259,15 +259,14 @@
     return num.toString();
   }
 
-  async function navigateToHome(event) {
+  async function navigateTo(event, targetPath) {
     event.preventDefault();
-    const targetHref = event.currentTarget.href;
     const pageContainer = document.getElementById('trajetoria-page-container');
     if (pageContainer) {
       pageContainer.classList.add('fading-out');
       await new Promise(resolve => setTimeout(resolve, 700));
     }
-    window.location.href = targetHref;
+    window.location.href = targetPath;
   }
 
   $: if (allData.length > 0) updateChart();
@@ -358,14 +357,27 @@
     </div>
   </section>
 
-  <section class="story-section navigation-section-wrapper">
-    <div class="navigation-section">
-        <a href="{base}/" class="nav-button-container back-button" on:click={navigateToHome}>
+  <section class="story-section navigation-section-wrapper" id="trajetoria-final-nav">
+    <div class="navigation-buttons-container">
+        <a href="{base}/" 
+           class="nav-button-container back-button" 
+           on:click={(e) => navigateTo(e, `${base}/`)}>
             <div class="nav-arrow-button back-arrow-icon">
-            <span>&larr;</span> 
+              <span>&larr;</span> 
             </div>
             <div class="nav-button-text">
-            Voltar para página inicial
+              Voltar para Página Inicial
+            </div>
+        </a>
+        
+        <a href="{base}/search" 
+           class="nav-button-container forward-button" 
+           on:click={(e) => navigateTo(e, `${base}/search`)}>
+            <div class="nav-button-text">
+              Explorar Ferramenta de Busca
+            </div>
+            <div class="nav-arrow-button next-arrow-icon">
+              <span>&rarr;</span> 
             </div>
         </a>
     </div>

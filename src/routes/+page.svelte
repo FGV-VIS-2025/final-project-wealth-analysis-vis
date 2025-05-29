@@ -12,28 +12,35 @@
   let countryData = [];
   let genderData = [];
 
+  // Função executada quando o componente é montado
+  // Carrega os dados do CSV e inicializa as visualizações
   onMount(async () => {
     const csvPath = `${base}/Billionaires Statistics Dataset.csv`;
     const rawData = await d3.csv(csvPath);
     
+    // Converte os dados brutos para o formato adequado
     allData = rawData.map(d => ({
       ...d,
       age: +d.age,
       finalWorth: +d.finalWorth
     }));
 
+    // Processa os dados de idade agrupando em faixas etárias de 10 anos
     ageData = d3.rollups(allData.filter(d => d.age && d.age > 0), v => v.length, d => Math.floor(d.age / 10) * 10)
                 .map(([key, value]) => ({ ageGroup: `${key}-${key+9}`, count: value }))
                 .sort((a,b) => parseInt(a.ageGroup) - parseInt(b.ageGroup));
 
+    // Processa os dados por país, pegando os 10 países com mais bilionários
     countryData = d3.rollups(allData.filter(d => d.country), v => v.length, d => d.country)
                     .map(([key, value]) => ({ country: key, count: value }))
                     .sort((a,b) => b.count - a.count)
                     .slice(0, 10);
 
+    // Processa os dados por gênero
     genderData = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
                    .map(([key, value]) => ({ gender: key || 'Unknown', count: value }));
 
+    // Configuração do sistema de observação para o scroll-telling
     const sections = document.querySelectorAll('#scroll-telling-page .story-section');
     const options = {
       root: document.querySelector('#scroll-telling-page'), 
@@ -43,6 +50,7 @@
 
     let activeSection = null; 
 
+    // Observer que controla a animação das seções durante o scroll
     const observer = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
@@ -61,10 +69,12 @@
       });
     }, options);
 
+    // Observa todas as seções para ativar as animações
     sections.forEach(section => {
       observer.observe(section);
     });
 
+    // Ativa a primeira seção após um pequeno delay
     if (sections.length > 0) {
         setTimeout(() => {
             if (!activeSection) {
@@ -76,6 +86,8 @@
 
   });
 
+  // Função que gerencia a navegação para a página de trajetória
+  // Adiciona uma animação de fade-out antes da transição
   async function navigateToTrajectory(event) {
     event.preventDefault();
     const targetHref = event.currentTarget.href; 

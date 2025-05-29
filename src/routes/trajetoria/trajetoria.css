@@ -404,3 +404,97 @@
     margin-top: 10px;
   }
 } 
+
+#trajetoria-page-container .navigation-section-wrapper {
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+}
+
+#trajetoria-page-container .navigation-buttons-container {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    gap: 20px; 
+    width: 100%;
+    max-width: 700px; 
+}
+
+#trajetoria-page-container .nav-button-container.back-button,
+#trajetoria-page-container .nav-button-container.forward-button {
+  display: inline-flex; 
+  flex-direction: row; 
+  align-items: center;
+  text-decoration: none;
+  color: #e0e0e0;
+  padding: 15px 25px; 
+  border-radius: 8px;
+  background-color: #2a2a2a; 
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: 1px solid #444;
+  min-width: 280px; 
+  justify-content: center; 
+}
+
+#trajetoria-page-container .nav-button-container.back-button:hover,
+#trajetoria-page-container .nav-button-container.forward-button:hover {
+  background-color: #383838;
+  transform: translateY(-2px);
+}
+
+#trajetoria-page-container .nav-button-container .nav-button-text {
+  font-size: 1.05em; 
+  color: #e0e0e0;
+  margin: 0 15px; 
+  text-align: center;
+  flex-grow: 1;
+}
+
+#trajetoria-page-container .nav-button-container.back-button .nav-arrow-button {
+  order: -1; 
+  margin-right: 15px;
+  margin-left: 0;
+}
+#trajetoria-page-container .nav-button-container.forward-button .nav-arrow-button {
+  margin-left: 15px; 
+  margin-right: 0;
+}
+
+#trajetoria-page-container .nav-button-container .nav-arrow-button.back-arrow-icon,
+#trajetoria-page-container .nav-button-container .nav-arrow-button.next-arrow-icon {
+  background-color: #ffd700;
+  color: #121212;
+  border-radius: 50%;
+  width: 45px; 
+  height: 45px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6em; 
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  flex-shrink: 0; 
+}
+
+#trajetoria-page-container .nav-button-container:hover .nav-arrow-button {
+  background-color: #e6c300;
+  transform: scale(1.05);
+}
+
+@media (min-width: 600px) { 
+  #trajetoria-page-container .navigation-buttons-container {
+    flex-direction: row; 
+    justify-content: center; 
+    gap: 30px; 
+  }
+}
+
+#trajetoria-page-container .nav-button-container.forward-button .nav-button-text {
+    margin-left: 15px;
+    margin-right: 0;
+}
+
+#trajetoria-page-container .nav-button-container.back-button .nav-button-text {
+    margin-right: 15px;
+    margin-left: 0; 
+}
