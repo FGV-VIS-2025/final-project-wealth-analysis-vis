@@ -4,6 +4,7 @@
   import { base } from '$app/paths';
   import '../../app.css'; 
   import './trajetoria.css'; 
+  import BillionaireMigrationMap from '$lib/components/BillionaireMigrationMap.svelte';
 
   let allData = [];
   let currentView = 'wealth';
@@ -354,6 +355,32 @@
           {/if}
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Seção do Mapa de Migração de Bilionários -->
+  <section class="story-section full-width map-section">
+    <div class="map-text-content">
+      <h2>Fluxos Migratórios da Elite Global</h2>
+      <p>
+        A riqueza transcende fronteiras. Este mapa revela os padrões migratórios dos bilionários, 
+        mostrando como a elite financeira se move pelo mundo. Cada círculo representa a concentração 
+        de bilionários por país, enquanto as setas douradas indicam os fluxos migratórios mais significativos 
+        entre nações de nascimento e residência atual.
+      </p>
+    </div>
+    
+    <div class="map-container-wrapper">
+      {#if !isLoading && allData.length > 0}
+        <BillionaireMigrationMap data={allData} />
+      {:else if isLoading}
+        <div class="loading-map">
+          <div class="loading-spinner"></div>
+          <span>Carregando mapa de migração...</span>
+        </div>
+      {:else}
+        <div class="no-data-map">Nenhum dado disponível para o mapa</div>
+      {/if}
     </div>
   </section>
 
