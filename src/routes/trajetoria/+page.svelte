@@ -274,6 +274,7 @@
 
   $: if (allData.length > 0) updateChart();
   $: currentViewData = views[currentViewIndex];
+  $: maxIndustryValue = currentView === 'industries' && chartData.length > 0 ? Math.max(...chartData.map(d => d.value)) : 1;
 </script>
 
 <svelte:head>
@@ -335,18 +336,28 @@
             <div class="visualization-container">
               {#each chartData as item, i}
                 <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
-                  <div class="bar-label">{item.label}</div>
+                  <div class="bar-label">
+                    {item.label}
+                    {#if currentView === 'industries'}
+                      {#if item.displayValue && item.displayValue !== 'N/A'}
+                        {' (' + item.displayValue.split(' (')[0] + ')'}
+                      {/if}
+                    {/if}
+                  </div>
                   <div class="bar-container">
                     {#if currentView === 'wealth'}
                       <div class="bar" style="width: {(item.value / 5000000) * 100}%; background: {currentViewData.color};"></div>
+                      <div class="bar-value">{item.displayValue}</div>
                     {:else if currentView === 'selfmade' || currentView === 'gender'}
                       <div class="bar" style="width: {item.value}%; background: {currentViewData.color};"></div>
+                      <div class="bar-value">{item.displayValue}</div>
                     {:else if currentView === 'age'}
                       <div class="bar" style="width: {(item.value / Math.max(...chartData.map(d => d.value))) * 100}%; background: {currentViewData.color};"></div>
+                      <div class="bar-value">{item.displayValue}</div>
                     {:else if currentView === 'industries'}
-                      <div class="bar" style="width: {(item.value / Math.max(...chartData.map(d => d.value))) * 100}%; background: {currentViewData.color};"></div>
+                      <div class="bar" style="width: {(item.value / 200) * 100}%; background: {currentViewData.color};"></div>
+                      <div class="bar-value">{item.value}</div>
                     {/if}
-                    <div class="bar-value">{item.displayValue}</div>
                   </div>
                 </div>
               {/each}
