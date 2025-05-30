@@ -61,27 +61,36 @@
   afterUpdate(drawChart);
 </script>
 
-<div class="pie-chart-container">
-  <svg bind:this={svgElement} style="position: relative;"></svg>
-  {#if tooltip.show}
-    <div class="tooltip" style="left: {tooltip.x}px; top: {tooltip.y}px;">
-      <span><b>{tooltip.label}</b></span><br>
-      <span>{tooltip.value} ({tooltip.percent}%)</span>
-    </div>
-  {/if}
-</div>
-<div class="legend-container">
-  {#each data as d}
-    <div class="legend-item">
-      <span class="legend-color" style="background: {colors(d.label)}"></span>
-      <span class="legend-label">{d.label}</span>
-    </div>
-  {/each}
+<div class="pie-flex-row">
+  <div class="pie-chart-container">
+    <svg bind:this={svgElement} style="position: relative;"></svg>
+    {#if tooltip.show}
+      <div class="tooltip" style="left: {tooltip.x}px; top: {tooltip.y}px;">
+        <span><b>{tooltip.label}</b></span><br>
+        <span>{tooltip.value} ({tooltip.percent}%)</span>
+      </div>
+    {/if}
+  </div>
+  <div class="legend-container">
+    {#each data as d}
+      <div class="legend-item">
+        <span class="legend-color" style="background: {colors(d.label)}"></span>
+        <span class="legend-label">{d.label}</span>
+      </div>
+    {/each}
+  </div>
 </div>
 
 <style>
-.pie-chart-container {
+.pie-flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   width: 100%;
+}
+.pie-chart-container {
+  width: 350px;
   height: 350px;
   display: flex;
   justify-content: center;
@@ -95,9 +104,10 @@ svg {
 .legend-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 18px;
-  margin-top: 18px;
+  margin-top: 0;
+  margin-left: 32px;
 }
 .legend-item {
   display: flex;

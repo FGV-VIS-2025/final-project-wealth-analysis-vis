@@ -22,6 +22,10 @@
   let continentOptions = ['Todos', 'América do Norte', 'América do Sul', 'Europa', 'Ásia', 'Oceania', 'África'];
   let countryDataAll = [];
   let countryInsight = '';
+  let selectedCountrySelfMade = 'Todos';
+  let countryOptionsSelfMade = [];
+  let selfMadeDataFiltered = [];
+  let selfMadeInsight = '';
   const countryToContinent = {
     'United States': 'América do Norte',
     'Canada': 'América do Norte',
@@ -216,6 +220,50 @@
     countryInsight = '';
   }
 
+  function updateSelfMadeInsight() {
+    if (!selfMadeDataFiltered.length) {
+      selfMadeInsight = '';
+      return;
+    }
+    const total = selfMadeDataFiltered.reduce((sum, d) => sum + d.value, 0);
+    const selfMade = selfMadeDataFiltered.find(d => d.label === 'Self-Made');
+    const notSelfMade = selfMadeDataFiltered.find(d => d.label === 'Não Self-Made');
+    const percentSelf = selfMade ? ((selfMade.value / total) * 100).toFixed(1) : '0.0';
+    const percentNot = notSelfMade ? ((notSelfMade.value / total) * 100).toFixed(1) : '0.0';
+    if (selectedCountrySelfMade === 'Todos') {
+      selfMadeInsight = `Globalmente, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são.`;
+    } else {
+      selfMadeInsight = `No país selecionado, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são.`;
+    }
+  }
+
+  $: if (allData.length > 0) {
+    countryOptionsSelfMade = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
+    countryOptionsSelfMade.unshift('Todos');
+  }
+
+  $: if (selectedCountrySelfMade && allData.length > 0) {
+    if (selectedCountrySelfMade === 'Todos') {
+      const total = allData.length;
+      const selfMade = allData.filter(d => d.selfMade === 'TRUE' || d.selfMade === 'True' || d.selfMade === 'true' || d.selfMade === true).length;
+      const notSelfMade = total - selfMade;
+      selfMadeDataFiltered = [
+        { label: 'Self-Made', value: selfMade },
+        { label: 'Não Self-Made', value: notSelfMade }
+      ];
+    } else {
+      const countryData = allData.filter(d => d.country === selectedCountrySelfMade);
+      const total = countryData.length;
+      const selfMade = countryData.filter(d => d.selfMade === 'TRUE' || d.selfMade === 'True' || d.selfMade === 'true' || d.selfMade === true).length;
+      const notSelfMade = total - selfMade;
+      selfMadeDataFiltered = [
+        { label: 'Self-Made', value: selfMade },
+        { label: 'Não Self-Made', value: notSelfMade }
+      ];
+    }
+    updateSelfMadeInsight();
+  }
+
 </script>
 
 <svelte:head>
@@ -337,11 +385,24 @@
       </p>
     </div>
     <div class="chart-content right">
-      {#if selfMadeData.length > 0}
-        <SelfMadePieChart data={selfMadeData} />
-      {:else}
-        <p class="loading-text">Carregando dados de self-made...</p>
-      {/if}
+      <div class="gender-chart-flex-col">
+        <div class="gender-filter-container-side">
+          <label for="country-select-selfmade">Filtrar por país:</label>
+          <select id="country-select-selfmade" bind:value={selectedCountrySelfMade}>
+            {#each countryOptionsSelfMade as country}
+              <option value={country}>{country}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="gender-chart-area">
+          {#if selfMadeDataFiltered.length > 0}
+            <SelfMadePieChart data={selfMadeDataFiltered} />
+            <div class="gender-insight">{selfMadeInsight}</div>
+          {:else}
+            <p class="loading-text">Carregando dados de self-made...</p>
+          {/if}
+        </div>
+      </div>
     </div>
   </section>
 

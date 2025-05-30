@@ -13,6 +13,14 @@
   let chartData = [];
   let isLoading = true;
   let hoveredItem = null;
+  let selectedCountrySelfMade = 'Todos';
+  let countryOptionsSelfMade = [];
+  let selfMadeDataFiltered = [];
+  let selfMadeInsight = '';
+  let selectedCountryAge = 'Todos';
+  let countryOptionsAge = [];
+  let ageDataFiltered = [];
+  let ageInsight = '';
 
   const views = [
     { key: 'wealth', label: 'Patrimônio por País', type: 'bar', color: '#ffd700' },
@@ -272,6 +280,81 @@
     window.location.href = targetPath;
   }
 
+  function updateSelfMadeInsight() {
+    if (!selfMadeDataFiltered.length) {
+      selfMadeInsight = '';
+      return;
+    }
+    const total = selfMadeDataFiltered.reduce((sum, d) => sum + d.count, 0);
+    const selfMade = selfMadeDataFiltered.find(d => d.label === 'Self-Made');
+    const notSelfMade = selfMadeDataFiltered.find(d => d.label === 'Não Self-Made');
+    const percentSelf = selfMade ? ((selfMade.count / total) * 100).toFixed(1) : '0.0';
+    const percentNot = notSelfMade ? ((notSelfMade.count / total) * 100).toFixed(1) : '0.0';
+    if (selectedCountrySelfMade === 'Todos') {
+      selfMadeInsight = `Globalmente, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são self-made.`;
+    } else {
+      selfMadeInsight = `No país selecionado, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são self-made.`;
+    }
+  }
+
+  function updateAgeInsight() {
+    if (!ageDataFiltered.length) {
+      ageInsight = '';
+      return;
+    }
+    const total = ageDataFiltered.reduce((sum, d) => sum + d.count, 0);
+    const weightedSum = ageDataFiltered.reduce((sum, d) => {
+      const [start] = d.ageGroup.split('-');
+      return sum + (parseInt(start) + 5) * d.count;
+    }, 0);
+    const avgAge = total > 0 ? (weightedSum / total).toFixed(1) : '0.0';
+    if (selectedCountryAge === 'Todos') {
+      ageInsight = `Globalmente, a idade média dos bilionários é ${avgAge} anos.`;
+    } else {
+      ageInsight = `No país selecionado, a idade média dos bilionários é ${avgAge} anos.`;
+    }
+  }
+
+  $: if (allData.length > 0) {
+    countryOptionsSelfMade = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
+    countryOptionsSelfMade.unshift('Todos');
+    countryOptionsAge = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
+    countryOptionsAge.unshift('Todos');
+  }
+
+  $: if (selectedCountrySelfMade && allData.length > 0 && currentView === 'selfmade') {
+    if (selectedCountrySelfMade === 'Todos') {
+      const total = allData.length;
+      const selfMade = allData.filter(d => d.selfMade === true).length;
+      const notSelfMade = total - selfMade;
+      selfMadeDataFiltered = [
+        { label: 'Self-Made', count: selfMade },
+        { label: 'Não Self-Made', count: notSelfMade }
+      ];
+    } else {
+      const countryData = allData.filter(d => d.country === selectedCountrySelfMade);
+      const total = countryData.length;
+      const selfMade = countryData.filter(d => d.selfMade === true).length;
+      const notSelfMade = total - selfMade;
+      selfMadeDataFiltered = [
+        { label: 'Self-Made', count: selfMade },
+        { label: 'Não Self-Made', count: notSelfMade }
+      ];
+    }
+    updateSelfMadeInsight();
+  }
+
+  $: if (selectedCountryAge && allData.length > 0 && currentView === 'age') {
+    let filtered = allData;
+    if (selectedCountryAge !== 'Todos') {
+      filtered = allData.filter(d => d.country === selectedCountryAge);
+    }
+    ageDataFiltered = d3.rollups(filtered.filter(d => d.age && d.age > 0), v => v.length, d => Math.floor(d.age / 10) * 10)
+      .map(([key, value]) => ({ ageGroup: `${key}-${key+9}`, count: value }))
+      .sort((a,b) => parseInt(a.ageGroup) - parseInt(b.ageGroup));
+    updateAgeInsight();
+  }
+
   $: if (allData.length > 0) updateChart();
   $: currentViewData = views[currentViewIndex];
   $: maxIndustryValue = currentView === 'industries' && chartData.length > 0 ? Math.max(...chartData.map(d => d.value)) : 1;
@@ -332,36 +415,55 @@
             <button class="nav-arrow next-arrow" on:click={nextView} disabled={isLoading}>→</button>
           </div>
           
+          {#if currentView === 'selfmade'}
+            <!-- filtro removido -->
+          {/if}
+          {#if currentView === 'age'}
+            <div class="gender-filter-container-side">
+              <label for="country-select-age">Filtrar por país:</label>
+              <select id="country-select-age" bind:value={selectedCountryAge}>
+                {#each countryOptionsAge as country}
+                  <option value={country}>{country}</option>
+                {/each}
+              </select>
+            </div>
+          {/if}
           {#if !isLoading && chartData.length > 0}
             <div class="visualization-container">
-              {#each chartData as item, i}
-                <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
-                  <div class="bar-label">
-                    {item.label}
-                    {#if currentView === 'industries'}
-                      {#if item.displayValue && item.displayValue !== 'N/A'}
-                        {' (' + item.displayValue.split(' (')[0] + ')'}
+              {#if currentView === 'age'}
+                <AgeHistogram data={ageDataFiltered} />
+              {:else}
+                {#each chartData as item, i}
+                  <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
+                    <div class="bar-label">
+                      {item.label}
+                      {#if currentView === 'industries'}
+                        {#if item.displayValue && item.displayValue !== 'N/A'}
+                          {' (' + item.displayValue.split(' (')[0] + ')'}
+                        {/if}
                       {/if}
-                    {/if}
+                    </div>
+                    <div class="bar-container">
+                      {#if currentView === 'wealth'}
+                        <div class="bar" style="width: {(item.value / 5000000) * 100}%; background: {currentViewData.color};"></div>
+                        <div class="bar-value">{item.displayValue}</div>
+                      {:else if currentView === 'selfmade' || currentView === 'gender'}
+                        <div class="bar" style="width: {item.value}%; background: {currentViewData.color};"></div>
+                        <div class="bar-value">{item.displayValue}</div>
+                      {:else if currentView === 'age'}
+                        <!-- nunca cai aqui, pois já tratamos acima -->
+                      {:else if currentView === 'industries'}
+                        <div class="bar" style="width: {(item.value / 200) * 100}%; background: {currentViewData.color};"></div>
+                        <div class="bar-value">{item.value}</div>
+                      {/if}
+                    </div>
                   </div>
-                  <div class="bar-container">
-                    {#if currentView === 'wealth'}
-                      <div class="bar" style="width: {(item.value / 5000000) * 100}%; background: {currentViewData.color};"></div>
-                      <div class="bar-value">{item.displayValue}</div>
-                    {:else if currentView === 'selfmade' || currentView === 'gender'}
-                      <div class="bar" style="width: {item.value}%; background: {currentViewData.color};"></div>
-                      <div class="bar-value">{item.displayValue}</div>
-                    {:else if currentView === 'age'}
-                      <div class="bar" style="width: {(item.value / Math.max(...chartData.map(d => d.value))) * 100}%; background: {currentViewData.color};"></div>
-                      <div class="bar-value">{item.displayValue}</div>
-                    {:else if currentView === 'industries'}
-                      <div class="bar" style="width: {(item.value / 200) * 100}%; background: {currentViewData.color};"></div>
-                      <div class="bar-value">{item.value}</div>
-                    {/if}
-                  </div>
-                </div>
-              {/each}
+                {/each}
+              {/if}
             </div>
+            {#if currentView === 'age'}
+              <div class="gender-insight" style="margin-top: 18px;">{ageInsight}</div>
+            {/if}
           {:else if isLoading}
             <div class="loading-chart">
               <div class="loading-spinner"></div>
