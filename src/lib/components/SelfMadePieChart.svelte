@@ -11,6 +11,9 @@
     .domain(["Self-Made", "Não Self-Made"])
     .range(["#22c55e", "#f59e42"]);
 
+  let hovered = null;
+  let tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
+
   function drawChart() {
     if (!svgElement || data.length === 0) return;
     d3.select(svgElement).selectAll('*').remove();
@@ -35,18 +38,23 @@
       .attr('fill', d => colors(d.data.label))
       .attr('stroke', '#222')
       .attr('stroke-width', 2)
-      .style('opacity', 0.9);
-
-    // Labels
-    svg.selectAll('text')
-      .data(data_ready)
-      .join('text')
-      .text(d => `${d.data.label}: ${d.data.value}`)
-      .attr('transform', d => `translate(${arc.centroid(d)})`)
-      .style('text-anchor', 'middle')
-      .style('fill', '#e0e0e0')
-      .style('font-size', '1.1em')
-      .style('font-weight', 'bold');
+      .style('opacity', 0.9)
+      .on('mousemove', (event, d) => {
+        const total = data.reduce((sum, v) => sum + v.value, 0);
+        tooltip = {
+          show: true,
+          x: event.offsetX + 10,
+          y: event.offsetY - 10,
+          label: d.data.label,
+          value: d.data.value,
+          percent: ((d.data.value / total) * 100).toFixed(1)
+        };
+        hovered = d.data.label;
+      })
+      .on('mouseleave', () => {
+        tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
+        hovered = null;
+      });
   }
 
   onMount(drawChart);
@@ -54,7 +62,21 @@
 </script>
 
 <div class="pie-chart-container">
-  <svg bind:this={svgElement}></svg>
+  <svg bind:this={svgElement} style="position: relative;"></svg>
+  {#if tooltip.show}
+    <div class="tooltip" style="left: {tooltip.x}px; top: {tooltip.y}px;">
+      <span><b>{tooltip.label}</b></span><br>
+      <span>{tooltip.value} ({tooltip.percent}%)</span>
+    </div>
+  {/if}
+</div>
+<div class="legend-container">
+  {#each data as d}
+    <div class="legend-item">
+      <span class="legend-color" style="background: {colors(d.label)}"></span>
+      <span class="legend-label">{d.label}</span>
+    </div>
+  {/each}
 </div>
 
 <style>
@@ -64,9 +86,48 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 svg {
   max-width: 100%;
   max-height: 100%;
+}
+.legend-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 18px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1em;
+  color: #e0e0e0;
+}
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 2px solid #222;
+}
+.tooltip {
+  position: absolute;
+  background: #222;
+  color: #ffd700;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 10;
+  border: 1px solid #ffd700;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
 }
 </style> 

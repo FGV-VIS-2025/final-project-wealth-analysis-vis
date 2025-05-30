@@ -10,6 +10,8 @@
   let innerWidth = width - margin.left - margin.right;
   let innerHeight = height - margin.top - margin.bottom;
 
+  let tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
+
   function drawChart() {
     if (!svgElement || data.length === 0) return;
 
@@ -42,6 +44,8 @@
       .selectAll('text')
         .style('fill', '#e0e0e0');
 
+    const total = data.reduce((sum, d) => sum + d.count, 0);
+
     svg.selectAll('rect')
       .data(data)
       .join('rect')
@@ -53,6 +57,19 @@
         if (d.gender === 'M') return '#2563eb'; // Blue for Male
         if (d.gender === 'F') return '#dc2626'; // Red for Female
         return '#6b7280'; // Default color for 'Unknown' or other
+      })
+      .on('mousemove', (event, d) => {
+        tooltip = {
+          show: true,
+          x: event.offsetX + 10,
+          y: event.offsetY - 10,
+          label: d.gender,
+          value: d.count,
+          percent: ((d.count / total) * 100).toFixed(1)
+        };
+      })
+      .on('mouseleave', () => {
+        tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
       });
 
     svg.append('text')
@@ -101,8 +118,14 @@
 
 </script>
 
-<div class="chart-container" bind:clientWidth={width} bind:clientHeight={height}>
+<div class="chart-container" bind:clientWidth={width} bind:clientHeight={height} style="position:relative;">
     <svg bind:this={svgElement}></svg>
+    {#if tooltip.show}
+      <div class="tooltip" style="left: {tooltip.x}px; top: {tooltip.y}px;">
+        <span><b>{tooltip.label}</b></span><br>
+        <span>{tooltip.value} ({tooltip.percent}%)</span>
+      </div>
+    {/if}
 </div>
 
 <style>
@@ -112,9 +135,27 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
   }
   svg {
     max-width: 100%;
     max-height: 100%;
+  }
+  .tooltip {
+    position: absolute;
+    background: #222;
+    color: #ffd700;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    pointer-events: none;
+    z-index: 10;
+    border: 1px solid #ffd700;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -100%);
+    white-space: nowrap;
   }
 </style> 
