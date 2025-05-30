@@ -94,7 +94,7 @@
     'América do Norte': '#1f77b4', // azul
     'América do Sul': '#ff7f0e',   // laranja
     'Europa': '#2ca02c',           // verde
-    'Ásia': '#d62728',             // vermelho
+    'Ásia': '#e377c2',             // rosa magenta
     'Oceania': '#9467bd',          // roxo
     'África': '#8c564b',           // marrom
     'Desconhecido': '#cccccc'      // cinza
@@ -552,10 +552,10 @@
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-    padding: 20px;
+    padding: 10px;
     background: #2a2a2a;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     border: 1px solid #444;
   }
   .controls-center {
@@ -649,7 +649,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    min-height: 520px;
+    min-height: 440px;
   }
   .map-visualization svg {
     margin-left: 0;

@@ -24,6 +24,8 @@
 
   let currentViewIndex = 0;
 
+  const xAxisTicks = [0, 1000, 2000, 3000, 4000, 5000];
+
   onMount(async () => {
     await loadData();
     animateTotal();
@@ -331,19 +333,23 @@
           
           {#if !isLoading && chartData.length > 0}
             <div class="visualization-container">
-              {#if currentViewData.type === 'bar'}
-                <div class="bar-chart">
-                  {#each chartData as item, i}
-                    <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
-                      <div class="bar-label">{item.label}</div>
-                      <div class="bar-container">
-                        <div class="bar" style="width: {(item.value / Math.max(...chartData.map(d => d.value))) * 100}%; background: {currentViewData.color};"></div>
-                        <div class="bar-value">{item.displayValue}</div>
-                      </div>
-                    </div>
-                  {/each}
+              {#each chartData as item, i}
+                <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
+                  <div class="bar-label">{item.label}</div>
+                  <div class="bar-container">
+                    {#if currentView === 'wealth'}
+                      <div class="bar" style="width: {(item.value / 5000000) * 100}%; background: {currentViewData.color};"></div>
+                    {:else if currentView === 'selfmade' || currentView === 'gender'}
+                      <div class="bar" style="width: {item.value}%; background: {currentViewData.color};"></div>
+                    {:else if currentView === 'age'}
+                      <div class="bar" style="width: {(item.value / Math.max(...chartData.map(d => d.value))) * 100}%; background: {currentViewData.color};"></div>
+                    {:else if currentView === 'industries'}
+                      <div class="bar" style="width: {(item.value / Math.max(...chartData.map(d => d.value))) * 100}%; background: {currentViewData.color};"></div>
+                    {/if}
+                    <div class="bar-value">{item.displayValue}</div>
+                  </div>
                 </div>
-              {/if}
+              {/each}
             </div>
           {:else if isLoading}
             <div class="loading-chart">
@@ -361,7 +367,7 @@
   <!-- Seção do Mapa de Migração de Bilionários -->
   <section class="story-section full-width map-section">
     <div class="map-text-content">
-      <h2>Fluxos Migratórios da Elite Global</h2>
+      <h1>Fluxos Migratórios da Elite Global</h1>
       <p>
         A riqueza transcende fronteiras. Este mapa revela os padrões migratórios dos bilionários, 
         mostrando como a elite financeira se move pelo mundo. Cada círculo representa a concentração 
