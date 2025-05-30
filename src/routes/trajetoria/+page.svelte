@@ -302,7 +302,7 @@
         <p>
             A riqueza total do mundo, em 2024, foi estimada em US$ 454,38 trilhões. 
             No entanto, a riqueza global está muito desequilibrada, com o 1% mais rico 
-            controlando quase dois terços da riqueza gerada since 2020, enquanto o 
+            controlando quase dois terços da riqueza gerada desde 2020, enquanto o 
             restante da população, cerca de 7 bilhões de pessoas, acumulou muito menos.
             É fato que podemos ver que os bilionários têm uma significância nessa desigualdade.
         </p>
