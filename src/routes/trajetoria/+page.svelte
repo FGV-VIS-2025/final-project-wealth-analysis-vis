@@ -420,14 +420,7 @@
             <!-- filtro removido -->
           {/if}
           {#if currentView === 'age'}
-            <div class="gender-filter-container-side" style="margin-bottom: 10px; justify-content: flex-end;">
-              <label for="country-select-age">Filtrar por país:</label>
-              <select id="country-select-age" bind:value={selectedCountryAge}>
-                {#each countryOptionsAge as country}
-                  <option value={country}>{country}</option>
-                {/each}
-              </select>
-            </div>
+            <!-- filtro removido -->
           {/if}
           <div class="visualization-container">
             {#if currentView === 'age'}
@@ -441,7 +434,6 @@
                     </div>
                   </div>
                 {/each}
-                <div class="gender-insight" style="margin-top: 18px;">{ageInsight}</div>
               {/key}
             {:else if !isLoading && chartData.length > 0}
               {#key currentView}
