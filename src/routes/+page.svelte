@@ -2,6 +2,7 @@
   import AgeHistogram from '$lib/components/AgeHistogram.svelte';
   import CountryBarChart from '$lib/components/CountryBarChart.svelte';
   import GenderChart from '$lib/components/GenderChart.svelte';
+  import SelfMadePieChart from '$lib/components/SelfMadePieChart.svelte';
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import { base } from '$app/paths';
@@ -11,6 +12,7 @@
   let ageData = [];
   let countryData = [];
   let genderData = [];
+  let selfMadeData = [];
 
   // Função executada quando o componente é montado
   // Carrega os dados do CSV e inicializa as visualizações
@@ -39,6 +41,15 @@
     // Processa os dados por gênero
     genderData = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
                    .map(([key, value]) => ({ gender: key || 'Unknown', count: value }));
+
+    // Processa os dados self-made
+    const total = allData.length;
+    const selfMade = allData.filter(d => d.selfMade === 'TRUE' || d.selfMade === 'True' || d.selfMade === 'true' || d.selfMade === true).length;
+    const notSelfMade = total - selfMade;
+    selfMadeData = [
+      { label: 'Self-Made', value: selfMade },
+      { label: 'Não Self-Made', value: notSelfMade }
+    ];
 
     // Configuração do sistema de observação para o scroll-telling
     const sections = document.querySelectorAll('#scroll-telling-page .story-section');
@@ -141,14 +152,7 @@
   </section>
 
   <section class="story-section side-by-side">
-    <div class="chart-content left">
-      {#if countryData.length > 0}
-        <CountryBarChart data={countryData} />
-      {:else}
-        <p class="loading-text">Carregando dados de país...</p>
-      {/if}
-    </div>
-    <div class="text-content right">
+    <div class="text-content left">
       <h2>A Geografia da Riqueza Extrema: Onde o Capital se Concentra?</h2>
       <p>
         Onde, no mundo, os bilionários fincam suas raízes – e suas fortunas? Este gráfico 
@@ -159,6 +163,13 @@
         Note a dominância de certas nações. Quais fatores econômicos, políticos e históricos 
         você acredita que alimentam essa distribuição tão desigual de capital global?
       </p>
+    </div>
+    <div class="chart-content right">
+      {#if countryData.length > 0}
+        <CountryBarChart data={countryData} />
+      {:else}
+        <p class="loading-text">Carregando dados de país...</p>
+      {/if}
     </div>
   </section>
 
@@ -181,6 +192,25 @@
         <AgeHistogram data={ageData} />
       {:else}
         <p class="loading-text">Carregando dados de idade...</p>
+      {/if}
+    </div>
+  </section>
+
+  <section class="story-section side-by-side">
+    <div class="text-content left">
+      <h2>Origem da Fortuna: Self-Made ou Herança?</h2>
+      <p>
+        O gráfico ao lado mostra a proporção de bilionários que construíram sua fortuna do zero (self-made) em comparação com aqueles que herdaram ou receberam grande parte de sua riqueza.
+      </p>
+      <p>
+        Essa divisão revela o quanto o topo da pirâmide financeira é resultado de empreendedorismo, inovação e oportunidades, ou de dinastias familiares e transferências de patrimônio.
+      </p>
+    </div>
+    <div class="chart-content right">
+      {#if selfMadeData.length > 0}
+        <SelfMadePieChart data={selfMadeData} />
+      {:else}
+        <p class="loading-text">Carregando dados de self-made...</p>
       {/if}
     </div>
   </section>
