@@ -420,11 +420,17 @@
             <!-- filtro removido -->
           {/if}
           {#if currentView === 'age'}
-            <!-- filtro removido -->
+            <div class="gender-filter-container-side" style="margin-bottom: 10px; justify-content: flex-end;">
+              <label for="country-select-age">Filtrar por país:</label>
+              <select id="country-select-age" bind:value={selectedCountryAge}>
+                {#each countryOptionsAge as country}
+                  <option value={country}>{country}</option>
+                {/each}
+              </select>
+            </div>
           {/if}
           <div class="visualization-container">
             {#if currentView === 'age'}
-              <!-- Apenas gráfico de barras, sem filtro nem insight -->
               {#key currentView}
                 {#each chartData as item, i}
                   <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
@@ -435,6 +441,7 @@
                     </div>
                   </div>
                 {/each}
+                <div class="gender-insight" style="margin-top: 18px;">{ageInsight}</div>
               {/key}
             {:else if !isLoading && chartData.length > 0}
               {#key currentView}

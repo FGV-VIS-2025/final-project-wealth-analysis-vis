@@ -26,6 +26,10 @@
   let countryOptionsSelfMade = [];
   let selfMadeDataFiltered = [];
   let selfMadeInsight = '';
+  let selectedCountryAge = 'Todos';
+  let countryOptionsAge = [];
+  let ageDataFiltered = [];
+  let ageInsight = '';
   const countryToContinent = {
     'United States': 'América do Norte',
     'Canada': 'América do Norte',
@@ -151,6 +155,10 @@
         }, 100); 
     }
 
+    // Após carregar allData:
+    countryOptionsAge = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
+    countryOptionsAge.unshift('Todos');
+
   });
 
   // Função que gerencia a navegação para a página de trajetória
@@ -231,9 +239,9 @@
     const percentSelf = selfMade ? ((selfMade.value / total) * 100).toFixed(1) : '0.0';
     const percentNot = notSelfMade ? ((notSelfMade.value / total) * 100).toFixed(1) : '0.0';
     if (selectedCountrySelfMade === 'Todos') {
-      selfMadeInsight = `Globalmente, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são.`;
+      selfMadeInsight = `Globalmente, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são self-made.`;
     } else {
-      selfMadeInsight = `No país selecionado, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são.`;
+      selfMadeInsight = `No país selecionado, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são self-made.`;
     }
   }
 
@@ -262,6 +270,35 @@
       ];
     }
     updateSelfMadeInsight();
+  }
+
+  function updateAgeInsight() {
+    if (!ageDataFiltered.length) {
+      ageInsight = '';
+      return;
+    }
+    const total = ageDataFiltered.reduce((sum, d) => sum + d.count, 0);
+    const weightedSum = ageDataFiltered.reduce((sum, d) => {
+      const [start] = d.ageGroup.split('-');
+      return sum + (parseInt(start) + 5) * d.count;
+    }, 0);
+    const avgAge = total > 0 ? (weightedSum / total).toFixed(1) : '0.0';
+    if (selectedCountryAge === 'Todos') {
+      ageInsight = `Globalmente, a idade média dos bilionários é ${avgAge} anos.`;
+    } else {
+      ageInsight = `No país selecionado, a idade média dos bilionários é ${avgAge} anos.`;
+    }
+  }
+
+  $: if (selectedCountryAge && allData.length > 0) {
+    let filtered = allData;
+    if (selectedCountryAge !== 'Todos') {
+      filtered = allData.filter(d => d.country === selectedCountryAge);
+    }
+    ageDataFiltered = d3.rollups(filtered.filter(d => d.age && d.age > 0), v => v.length, d => Math.floor(d.age / 10) * 10)
+      .map(([key, value]) => ({ ageGroup: `${key}-${key+9}`, count: value }))
+      .sort((a,b) => parseInt(a.ageGroup) - parseInt(b.ageGroup));
+    updateAgeInsight();
   }
 
 </script>
@@ -366,11 +403,24 @@
       </p>
     </div>
     <div class="chart-content right">
-      {#if ageData.length > 0}
-        <AgeHistogram data={ageData} />
-      {:else}
-        <p class="loading-text">Carregando dados de idade...</p>
-      {/if}
+      <div class="gender-chart-flex-col">
+        <div class="gender-filter-container-side" style="justify-content: flex-end;">
+          <label for="country-select-age">Filtrar por país:</label>
+          <select id="country-select-age" bind:value={selectedCountryAge}>
+            {#each countryOptionsAge as country}
+              <option value={country}>{country}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="gender-chart-area">
+          {#if ageDataFiltered.length > 0}
+            <AgeHistogram data={ageDataFiltered} />
+            <div class="gender-insight">{ageInsight}</div>
+          {:else}
+            <p class="loading-text">Carregando dados de idade...</p>
+          {/if}
+        </div>
+      </div>
     </div>
   </section>
 
