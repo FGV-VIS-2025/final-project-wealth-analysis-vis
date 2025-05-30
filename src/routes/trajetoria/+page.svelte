@@ -5,6 +5,7 @@
   import '../../app.css'; 
   import './trajetoria.css'; 
   import BillionaireMigrationMap from '$lib/components/BillionaireMigrationMap.svelte';
+  import { fade } from 'svelte/transition';
 
   let allData = [];
   let currentView = 'wealth';
@@ -357,7 +358,7 @@
 
   $: if (allData.length > 0) updateChart();
   $: currentViewData = views[currentViewIndex];
-  $: maxIndustryValue = currentView === 'industries' && chartData.length > 0 ? Math.max(...chartData.map(d => d.value)) : 1;
+  $: maxValue = Math.max(...chartData.map(d => d.value));
 </script>
 
 <svelte:head>
@@ -419,20 +420,24 @@
             <!-- filtro removido -->
           {/if}
           {#if currentView === 'age'}
-            <div class="gender-filter-container-side">
-              <label for="country-select-age">Filtrar por país:</label>
-              <select id="country-select-age" bind:value={selectedCountryAge}>
-                {#each countryOptionsAge as country}
-                  <option value={country}>{country}</option>
-                {/each}
-              </select>
-            </div>
+            <!-- filtro removido -->
           {/if}
-          {#if !isLoading && chartData.length > 0}
-            <div class="visualization-container">
-              {#if currentView === 'age'}
-                <AgeHistogram data={ageDataFiltered} />
-              {:else}
+          <div class="visualization-container">
+            {#if currentView === 'age'}
+              <!-- Apenas gráfico de barras, sem filtro nem insight -->
+              {#key currentView}
+                {#each chartData as item, i}
+                  <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
+                    <div class="bar-label">{item.label}</div>
+                    <div class="bar-container">
+                      <div class="bar" style="width: {(item.value / maxValue) * 100}%; background: {currentViewData.color};"></div>
+                      <div class="bar-value">{item.displayValue}</div>
+                    </div>
+                  </div>
+                {/each}
+              {/key}
+            {:else if !isLoading && chartData.length > 0}
+              {#key currentView}
                 {#each chartData as item, i}
                   <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
                     <div class="bar-label">
@@ -459,19 +464,16 @@
                     </div>
                   </div>
                 {/each}
-              {/if}
-            </div>
-            {#if currentView === 'age'}
-              <div class="gender-insight" style="margin-top: 18px;">{ageInsight}</div>
+              {/key}
+            {:else if isLoading}
+              <div class="loading-chart">
+                <div class="loading-spinner"></div>
+                <span>Carregando visualização...</span>
+              </div>
+            {:else}
+              <div class="no-data">Nenhum dado disponível</div>
             {/if}
-          {:else if isLoading}
-            <div class="loading-chart">
-              <div class="loading-spinner"></div>
-              <span>Carregando visualização...</span>
-            </div>
-          {:else}
-            <div class="no-data">Nenhum dado disponível</div>
-          {/if}
+          </div>
         </div>
       </div>
     </div>

@@ -318,10 +318,10 @@
 }
 
 #trajetoria-page-container .chart-area-wrapper .visualization-container {
-    flex-grow: 1; 
-    overflow-y: auto; 
-    padding-right: 10px; 
-    margin-bottom: 10px; 
+    flex-grow: 1;
+    overflow-y: visible;
+    padding-right: 10px;
+    margin-bottom: 10px;
 }
 
 #trajetoria-page-container .bar-chart { 
