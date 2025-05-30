@@ -1,7 +1,9 @@
 <script>
   export let data = [];
+  export let animate = false;
   import { onMount, afterUpdate } from 'svelte';
   import * as d3 from 'd3';
+  import { tick } from 'svelte';
 
   let svgElement;
   const margin = { top: 20, right: 30, bottom: 70, left: 60 };
@@ -11,8 +13,9 @@
   let innerHeight = height - margin.top - margin.bottom;
 
   let tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
+  let lastDataKey = '';
 
-  function drawChart() {
+  async function drawChart() {
     if (!svgElement || data.length === 0) return;
 
     d3.select(svgElement).selectAll('*').remove();
@@ -46,18 +49,24 @@
 
     const total = data.reduce((sum, d) => sum + d.count, 0);
 
-    svg.selectAll('rect')
-      .data(data)
-      .join('rect')
+    const bars = svg.selectAll('rect')
+      .data(data, d => d.gender);
+
+    const barsEnter = bars.enter().append('rect')
       .attr('x', d => x(d.gender))
-      .attr('y', d => y(d.count))
       .attr('width', x.bandwidth())
-      .attr('height', d => innerHeight - y(d.count))
       .attr('fill', d => {
-        if (d.gender === 'M') return '#2563eb'; // Blue for Male
-        if (d.gender === 'F') return '#dc2626'; // Red for Female
-        return '#6b7280'; // Default color for 'Unknown' or other
-      })
+        if (d.gender === 'M') return '#2563eb';
+        if (d.gender === 'F') return '#dc2626';
+        return '#6b7280';
+      });
+
+    barsEnter
+      .attr('y', d => y(d.count))
+      .attr('height', d => innerHeight - y(d.count));
+
+    // Tooltip sempre instantâneo, independente de animação
+    barsEnter
       .on('mousemove', (event, d) => {
         tooltip = {
           show: true,
@@ -71,6 +80,19 @@
       .on('mouseleave', () => {
         tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
       });
+
+    // Só remove transições se não for animação de entrada
+    if (!animate) {
+      d3.select(svgElement).selectAll('rect')
+        .interrupt()
+        .style('transition', 'none');
+    }
+
+    let newDataKey = data.map(d => d.gender + d.count).join('-');
+    if (lastDataKey !== newDataKey) {
+      tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
+      lastDataKey = newDataKey;
+    }
 
     svg.append('text')
         .attr('text-anchor', 'middle')
@@ -140,6 +162,9 @@
   svg {
     max-width: 100%;
     max-height: 100%;
+  }
+  svg rect {
+    transition: none !important;
   }
   .tooltip {
     position: absolute;

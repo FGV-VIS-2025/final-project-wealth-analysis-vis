@@ -13,6 +13,11 @@
   let countryData = [];
   let genderData = [];
   let selfMadeData = [];
+  let selectedCountry = 'Todos';
+  let countryOptions = [];
+  let genderDataFiltered = [];
+  let genderDataGlobal = [];
+  let genderInsight = '';
 
   // Função executada quando o componente é montado
   // Carrega os dados do CSV e inicializa as visualizações
@@ -50,6 +55,18 @@
       { label: 'Self-Made', value: selfMade },
       { label: 'Não Self-Made', value: notSelfMade }
     ];
+
+    // Gera lista de países para o filtro
+    countryOptions = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
+    countryOptions.unshift('Todos');
+
+    // Dados globais
+    genderDataGlobal = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
+      .map(([key, value]) => ({ gender: key || 'Unknown', count: value }));
+
+    // Inicializa filtrado como global
+    genderDataFiltered = [...genderDataGlobal];
+    updateGenderInsight();
 
     // Configuração do sistema de observação para o scroll-telling
     const sections = document.querySelectorAll('#scroll-telling-page .story-section');
@@ -111,6 +128,42 @@
     window.location.href = targetHref;
   }
 
+  // Atualiza o insight do gênero com base no país selecionado
+  function updateGenderInsight() {
+    if (!genderDataFiltered.length) {
+      genderInsight = '';
+      return;
+    }
+    const total = genderDataFiltered.reduce((sum, d) => sum + d.count, 0);
+    const female = genderDataFiltered.find(d => d.gender === 'F');
+    const male = genderDataFiltered.find(d => d.gender === 'M');
+    const percentF = female ? ((female.count / total) * 100).toFixed(1) : '0.0';
+    const percentM = male ? ((male.count / total) * 100).toFixed(1) : '0.0';
+    if (selectedCountry === 'Todos') {
+      genderInsight = `Globalmente, ${percentF}% dos bilionários são mulheres e ${percentM}% são homens.`;
+    } else {
+      // Compara com global
+      const totalGlobal = genderDataGlobal.reduce((sum, d) => sum + d.count, 0);
+      const femaleGlobal = genderDataGlobal.find(d => d.gender === 'F');
+      const percentFGlobal = femaleGlobal ? ((femaleGlobal.count / totalGlobal) * 100).toFixed(1) : '0.0';
+      genderInsight = `No país selecionado, ${percentF}% dos bilionários são mulheres (global: ${percentFGlobal}%).`;
+    }
+  }
+
+  // Atualiza os dados de gênero com base no país selecionado
+  $: if (selectedCountry && allData.length > 0) {
+    if (selectedCountry === 'Todos') {
+      genderDataFiltered = [...genderDataGlobal];
+    } else {
+      genderDataFiltered = d3.rollups(
+        allData.filter(d => d.gender && d.country === selectedCountry),
+        v => v.length,
+        d => d.gender
+      ).map(([key, value]) => ({ gender: key || 'Unknown', count: value }));
+    }
+    updateGenderInsight();
+  }
+
 </script>
 
 <svelte:head>
@@ -143,11 +196,24 @@
       </p>
     </div>
     <div class="chart-content right">
-      {#if genderData.length > 0}
-        <GenderChart data={genderData} />
-      {:else}
-        <p class="loading-text">Carregando dados de gênero...</p>
-      {/if}
+      <div class="gender-chart-flex-col">
+        <div class="gender-filter-container-side">
+          <label for="country-select">Filtrar por país:</label>
+          <select id="country-select" bind:value={selectedCountry}>
+            {#each countryOptions as country}
+              <option value={country}>{country}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="gender-chart-area">
+          {#if genderDataFiltered.length > 0}
+            <GenderChart data={genderDataFiltered} animate={true} />
+            <div class="gender-insight">{genderInsight}</div>
+          {:else}
+            <p class="loading-text">Carregando dados de gênero...</p>
+          {/if}
+        </div>
+      </div>
     </div>
   </section>
 
@@ -228,3 +294,35 @@
     </div>
   </section>
 </div>
+
+<style>
+.gender-chart-flex-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+.gender-filter-container-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  width: 100%;
+}
+.gender-chart-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.gender-insight {
+  margin-top: 14px;
+  font-size: 1.1em;
+  color: #ffd700;
+  background: #232323;
+  border-radius: 6px;
+  padding: 8px 14px;
+  display: inline-block;
+}
+</style>
