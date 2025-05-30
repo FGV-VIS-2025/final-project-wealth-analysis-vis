@@ -18,6 +18,42 @@
   let genderDataFiltered = [];
   let genderDataGlobal = [];
   let genderInsight = '';
+  let selectedContinent = 'Todos';
+  let continentOptions = ['Todos', 'América do Norte', 'América do Sul', 'Europa', 'Ásia', 'Oceania', 'África'];
+  let countryDataAll = [];
+  let countryInsight = '';
+  const countryToContinent = {
+    'United States': 'América do Norte',
+    'Canada': 'América do Norte',
+    'Mexico': 'América do Norte',
+    'Brazil': 'América do Sul',
+    'Chile': 'América do Sul',
+    'Argentina': 'América do Sul',
+    'Germany': 'Europa',
+    'United Kingdom': 'Europa',
+    'France': 'Europa',
+    'Italy': 'Europa',
+    'Russia': 'Europa',
+    'Switzerland': 'Europa',
+    'Sweden': 'Europa',
+    'Spain': 'Europa',
+    'Netherlands': 'Europa',
+    'Czech Republic': 'Europa',
+    'China': 'Ásia',
+    'India': 'Ásia',
+    'Japan': 'Ásia',
+    'Hong Kong': 'Ásia',
+    'Singapore': 'Ásia',
+    'South Korea': 'Ásia',
+    'Israel': 'Ásia',
+    'Indonesia': 'Ásia',
+    'Thailand': 'Ásia',
+    'Turkey': 'Ásia',
+    'Saudi Arabia': 'Ásia',
+    'Taiwan': 'Ásia',
+    'Australia': 'Oceania',
+    'South Africa': 'África',
+  };
 
   // Função executada quando o componente é montado
   // Carrega os dados do CSV e inicializa as visualizações
@@ -37,11 +73,10 @@
                 .map(([key, value]) => ({ ageGroup: `${key}-${key+9}`, count: value }))
                 .sort((a,b) => parseInt(a.ageGroup) - parseInt(b.ageGroup));
 
-    // Processa os dados por país, pegando os 10 países com mais bilionários
-    countryData = d3.rollups(allData.filter(d => d.country), v => v.length, d => d.country)
-                    .map(([key, value]) => ({ country: key, count: value }))
-                    .sort((a,b) => b.count - a.count)
-                    .slice(0, 10);
+    // Processa os dados por país, pegando todos os países
+    countryDataAll = d3.rollups(allData.filter(d => d.country), v => v.length, d => d.country)
+      .map(([key, value]) => ({ country: key, count: value }))
+      .sort((a,b) => b.count - a.count);
 
     // Processa os dados por gênero
     genderData = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
@@ -164,6 +199,23 @@
     updateGenderInsight();
   }
 
+  $: filteredCountryData = countryDataAll.filter(d => selectedContinent === 'Todos' || countryToContinent[d.country] === selectedContinent);
+  $: countryData = filteredCountryData.slice(0, 10);
+
+  $: if (countryData.length > 0 && selectedContinent !== 'Todos') {
+    const total = countryData.reduce((sum, d) => sum + d.count, 0);
+    const top = countryData[0];
+    const percent = ((top.count / total) * 100).toFixed(1);
+    countryInsight = `${top.country} concentra ${percent}% dos bilionários do continente selecionado.`;
+  } else if (countryData.length > 0 && selectedContinent === 'Todos') {
+    const total = countryData.reduce((sum, d) => sum + d.count, 0);
+    const top = countryData[0];
+    const percent = ((top.count / total) * 100).toFixed(1);
+    countryInsight = `${top.country} concentra ${percent}% dos bilionários do top 10 global.`;
+  } else {
+    countryInsight = '';
+  }
+
 </script>
 
 <svelte:head>
@@ -219,26 +271,38 @@
 
   <section class="story-section side-by-side">
     <div class="text-content left">
-      <h2>A Geografia da Riqueza Extrema: Onde o Capital se Concentra?</h2>
-      <p>
-        Onde, no mundo, os bilionários fincam suas raízes – e suas fortunas? Este gráfico 
-        destaca os países com o maior número deles, oferecendo uma perspectiva geográfica da 
-        gritante concentração de riqueza e, por consequência, de poder.
-      </p>
-      <p>
-        Note a dominância de certas nações. Quais fatores econômicos, políticos e históricos 
-        você acredita que alimentam essa distribuição tão desigual de capital global?
-      </p>
+      <div class="country-chart-text">
+        <h2>A Geografia da Riqueza Extrema: Onde o Capital se Concentra?</h2>
+        <p>
+          Onde, no mundo, os bilionários fincam suas raízes – e suas fortunas? Este gráfico 
+          destaca os países com o maior número deles, oferecendo uma perspectiva geográfica da 
+          gritante concentração de riqueza e, por consequência, de poder.
+        </p>
+        <p>
+          Note a dominância de certas nações. Quais fatores econômicos, políticos e históricos 
+          você acredita que alimentam essa distribuição tão desigual de capital global?
+        </p>
+      </div>
     </div>
     <div class="chart-content right">
-      {#if countryData.length > 0}
-        <CountryBarChart data={countryData} />
-      {:else}
-        <p class="loading-text">Carregando dados de país...</p>
-      {/if}
+      <div class="country-chart-area">
+        <div class="continent-filter-container-top">
+          <label for="continent-select">Filtrar por continente:</label>
+          <select id="continent-select" bind:value={selectedContinent}>
+            {#each continentOptions as continent}
+              <option value={continent}>{continent}</option>
+            {/each}
+          </select>
+        </div>
+        {#if countryData.length > 0}
+          <CountryBarChart data={countryData} />
+          <div class="country-insight">{countryInsight}</div>
+        {:else}
+          <p class="loading-text">Nenhum país encontrado para o continente selecionado.</p>
+        {/if}
+      </div>
     </div>
   </section>
-
 
   <section class="story-section side-by-side">
     <div class="text-content left">
@@ -317,6 +381,32 @@
   width: 100%;
 }
 .gender-insight {
+  margin-top: 14px;
+  font-size: 1.1em;
+  color: #ffd700;
+  background: #232323;
+  border-radius: 6px;
+  padding: 8px 14px;
+  display: inline-block;
+}
+.country-chart-flex-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+.country-chart-text {
+  max-width: 900px;
+  margin: 0 auto 18px auto;
+  text-align: center;
+}
+.country-chart-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.country-insight {
   margin-top: 14px;
   font-size: 1.1em;
   color: #ffd700;
