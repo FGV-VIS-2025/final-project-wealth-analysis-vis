@@ -462,7 +462,7 @@
                       {/if}
                     </div>
                   </div>
-                {/each} 
+                {/each}
               {/key}
             {:else if isLoading}
               <div class="loading-chart">
