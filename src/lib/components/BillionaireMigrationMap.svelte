@@ -10,6 +10,7 @@
   let selectedIndustry = 'Todos';
   let selectedGender = 'Todos';
   let showStatisticsPanel = false;
+  let selectedContinent = 'Todos';
   
   const width = 1000;
   const height = 500;
@@ -99,6 +100,8 @@
     'Desconhecido': '#cccccc'      // cinza
   };
 
+  const continentOptions = ['Todos', ...Object.keys(continentColors).filter(c => c !== 'Desconhecido')];
+
   onMount(() => {
     if (data.length > 0) {
       extractFilters();
@@ -137,7 +140,16 @@
         genderMatch = person.gender.toString().trim() === selectedGender.toString().trim();
       }
       
-      return industryMatch && genderMatch;
+      let continentMatch = false;
+      if (selectedContinent === 'Todos') {
+        continentMatch = true;
+      } else {
+        const country = person.country || person.countryOfCitizenship;
+        const continent = countryToContinent[country] || 'Desconhecido';
+        continentMatch = continent === selectedContinent;
+      }
+      
+      return industryMatch && genderMatch && continentMatch;
     });
     
     processData();
@@ -218,13 +230,19 @@
       .translate([width / 2, height / 2]);
 
     const countryData = worldCountries
-      .filter(country => countryStats[country.name])
+      .filter(country => {
+        if (!countryStats[country.name]) return false;
+        const continent = countryToContinent[country.name] || 'Desconhecido';
+        if (selectedContinent === 'Todos') return true;
+        return continent === selectedContinent;
+      })
       .map(country => ({
         ...country,
         stats: countryStats[country.name],
-        projected: projection(country.center)
+        projected: projection(country.center),
+        continent: countryToContinent[country.name] || 'Desconhecido'
       }))
-      .filter(d => d.projected);
+      .filter(d => d.projected && (selectedContinent === 'Todos' || d.continent === selectedContinent));
 
     const maxResidents = Math.max(...Object.values(countryStats).map(d => d.residents));
     const circleScale = d3.scaleSqrt().domain([0, maxResidents]).range([8, 45]);
@@ -344,7 +362,7 @@
       });
 
     svg.append("g").selectAll("text")
-      .data(nodes.filter(d => d.stats.residents >= 3))
+      .data(nodes)
       .enter()
       .append("text")
       .attr("x", d => d.x)
@@ -427,6 +445,10 @@
       updateFilteredData();
     }
   }
+
+  $: if (selectedContinent) {
+    updateFilteredData();
+  }
 </script>
 
 <div class="map-container">
@@ -444,6 +466,14 @@
       <select id="gender-select" bind:value={selectedGender}>
         {#each genders as gender}
           <option value={gender}>{gender}</option>
+        {/each}
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="continent-select">Filtro por Continente:</label>
+      <select id="continent-select" bind:value={selectedContinent}>
+        {#each continentOptions as continent}
+          <option value={continent}>{continent}</option>
         {/each}
       </select>
     </div>
@@ -480,7 +510,7 @@
         </div>
         <div class="stat-item">
           <span class="stat-label">Filtros Ativos:</span>
-          <span class="stat-value">{selectedIndustry} | {selectedGender}</span>
+          <span class="stat-value">{selectedIndustry} | {selectedGender} | {selectedContinent}</span>
         </div>
         {#if selectedCountry && countryStats[selectedCountry]}
           <div class="stat-item selected-country">
