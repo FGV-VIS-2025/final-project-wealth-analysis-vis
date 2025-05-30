@@ -65,7 +65,6 @@
       .attr('y', d => y(d.count))
       .attr('height', d => innerHeight - y(d.count));
 
-    // Tooltip sempre instantâneo, independente de animação
     barsEnter
       .on('mousemove', (event, d) => {
         tooltip = {

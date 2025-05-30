@@ -52,6 +52,53 @@
   let genders = [];
   let simulation;
 
+  // Adicione o mapeamento de país para continente (copiado do +page.svelte)
+  const countryToContinent = {
+    'United States': 'América do Norte',
+    'Canada': 'América do Norte',
+    'Mexico': 'América do Norte',
+    'Brazil': 'América do Sul',
+    'Chile': 'América do Sul',
+    'Argentina': 'América do Sul',
+    'Germany': 'Europa',
+    'United Kingdom': 'Europa',
+    'France': 'Europa',
+    'Italy': 'Europa',
+    'Russia': 'Europa',
+    'Switzerland': 'Europa',
+    'Sweden': 'Europa',
+    'Spain': 'Europa',
+    'Netherlands': 'Europa',
+    'Czech Republic': 'Europa',
+    'Norway': 'Europa',
+    'Belgium': 'Europa',
+    'China': 'Ásia',
+    'India': 'Ásia',
+    'Japan': 'Ásia',
+    'Hong Kong': 'Ásia',
+    'Singapore': 'Ásia',
+    'South Korea': 'Ásia',
+    'Israel': 'Ásia',
+    'Indonesia': 'Ásia',
+    'Thailand': 'Ásia',
+    'Turkey': 'Ásia',
+    'Saudi Arabia': 'Ásia',
+    'Taiwan': 'Ásia',
+    'Australia': 'Oceania',
+    'South Africa': 'África',
+  };
+
+  // Defina as cores para cada continente
+  const continentColors = {
+    'América do Norte': '#1f77b4', // azul
+    'América do Sul': '#ff7f0e',   // laranja
+    'Europa': '#2ca02c',           // verde
+    'Ásia': '#d62728',             // vermelho
+    'Oceania': '#9467bd',          // roxo
+    'África': '#8c564b',           // marrom
+    'Desconhecido': '#cccccc'      // cinza
+  };
+
   onMount(() => {
     if (data.length > 0) {
       extractFilters();
@@ -186,7 +233,8 @@
       ...d,
       x: d.projected[0],
       y: d.projected[1],
-      r: circleScale(d.stats.residents)
+      r: circleScale(d.stats.residents),
+      continent: countryToContinent[d.name] || 'Desconhecido'
     }));
 
     svg.append("rect")
@@ -273,7 +321,7 @@
       .attr("cx", d => d.x)
       .attr("cy", d => d.y)
       .attr("r", d => d.r)
-      .attr("fill", "#ffd700")
+      .attr("fill", d => continentColors[d.continent] || continentColors['Desconhecido'])
       .attr("fill-opacity", 0.8)
       .attr("stroke", "#fff")
       .attr("stroke-width", 2)
@@ -319,7 +367,9 @@
     }
 
     function resetVisualization() {
-      countryCircles.attr("fill", "#ffd700").attr("fill-opacity", 0.8).attr("stroke-width", 2);
+      countryCircles.attr("fill", d => continentColors[d.continent] || continentColors['Desconhecido'])
+                    .attr("fill-opacity", 0.8)
+                    .attr("stroke-width", 2);
       flows.attr("stroke", "#ffd700")
            .attr("stroke-opacity", 0.6)
            .attr("stroke-width", d => Math.max(1, Math.sqrt(d.count) * 1.2))
@@ -328,12 +378,12 @@
 
     function highlightCountryFlows(countryName) {
       countryCircles
-        .attr("fill", d => d.name === countryName ? "#ff6b6b" : "#ffd700")
+        .attr("fill", d => d.name === countryName ? "#ff6b6b" : continentColors[d.continent] || continentColors['Desconhecido'])
         .attr("fill-opacity", d => d.name === countryName ? 1 : 0.3)
         .attr("stroke-width", d => d.name === countryName ? 4 : 2);
 
       flows
-        .attr("stroke", d => (d.source === countryName || d.target === countryName) ? "#ff6b6b" : "#ffd700")
+        .attr("stroke", d => (d.source === countryName || d.target === countryName) ? "#ff6b6b" : continentColors[d.continent] || continentColors['Desconhecido'])
         .attr("stroke-opacity", d => (d.source === countryName || d.target === countryName) ? 0.9 : 0.1)
         .attr("stroke-width", d => (d.source === countryName || d.target === countryName) ? Math.max(2, Math.sqrt(d.count) * 2) : Math.max(1, Math.sqrt(d.count) * 1.2))
         .attr("marker-end", d => (d.source === countryName || d.target === countryName) ? "url(#arrowhead-highlighted)" : "url(#arrowhead)");
@@ -380,7 +430,7 @@
 </script>
 
 <div class="map-container">
-  <div class="controls-panel">
+  <div class="controls-panel controls-center">
     <div class="control-group">
       <label for="industry-select">Filtro por Indústria:</label>
       <select id="industry-select" bind:value={selectedIndustry}>
@@ -389,7 +439,6 @@
         {/each}
       </select>
     </div>
-
     <div class="control-group">
       <label for="gender-select">Filtro por Gênero:</label>
       <select id="gender-select" bind:value={selectedGender}>
@@ -398,7 +447,6 @@
         {/each}
       </select>
     </div>
-
     <div class="control-group">
       <button 
         class="stats-toggle"
@@ -408,7 +456,6 @@
       </button>
     </div>
   </div>
-
   {#if showStatisticsPanel}
     <div class="statistics-panel">
       <h3>Estatísticas Globais</h3>
@@ -447,9 +494,18 @@
       </div>
     </div>
   {/if}
-
   <div class="map-visualization">
     <svg bind:this={svgElement} {width} {height}></svg>
+    <div class="continent-legend legend-overlay">
+      {#each Object.entries(continentColors) as [continent, color]}
+        {#if continent !== 'Desconhecido'}
+          <div class="legend-item">
+            <span class="legend-color" style="background: {color}"></span>
+            <span class="legend-label">{continent}</span>
+          </div>
+        {/if}
+      {/each}
+    </div>
   </div>
 </div>
 
@@ -459,8 +515,9 @@
     max-width: 1050px;
     margin: 0 auto;
     font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
   }
-
   .controls-panel {
     display: flex;
     flex-wrap: wrap;
@@ -471,19 +528,19 @@
     margin-bottom: 20px;
     border: 1px solid #444;
   }
-
+  .controls-center {
+    justify-content: center;
+  }
   .control-group {
     display: flex;
     align-items: center;
     gap: 10px;
   }
-
   .control-group label {
     font-size: 14px;
     color: #e0e0e0;
     font-weight: 500;
   }
-
   .stats-toggle {
     padding: 8px 16px;
     background: #ffd700;
@@ -495,11 +552,9 @@
     font-weight: 500;
     transition: background 0.2s;
   }
-
   .stats-toggle:hover {
     background: #ffed4e;
   }
-
   select {
     padding: 8px 12px;
     border: 1px solid #555;
@@ -509,12 +564,10 @@
     font-size: 14px;
     min-width: 150px;
   }
-
   select:focus {
     outline: none;
     border-color: #ffd700;
   }
-
   .statistics-panel {
     background: #2a2a2a;
     border: 1px solid #444;
@@ -522,19 +575,16 @@
     padding: 20px;
     margin-bottom: 20px;
   }
-
   .statistics-panel h3 {
     color: #ffd700;
     margin: 0 0 15px 0;
     font-size: 18px;
   }
-
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 15px;
   }
-
   .stat-item {
     display: flex;
     justify-content: space-between;
@@ -544,23 +594,19 @@
     border-radius: 6px;
     border: 1px solid #444;
   }
-
   .stat-item.selected-country {
     border-color: #ff6b6b;
     background: rgba(255, 107, 107, 0.1);
   }
-
   .stat-label {
     color: #b0b0b0;
     font-size: 14px;
   }
-
   .stat-value {
     color: #ffd700;
     font-weight: 600;
     font-size: 14px;
   }
-
   .map-visualization {
     background: #1a1a1a;
     border: 1px solid #444;
@@ -568,24 +614,72 @@
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     margin-bottom: 20px;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 520px;
   }
-
-  @media (max-width: 768px) {
-    .controls-panel {
-      flex-direction: column;
-      gap: 15px;
+  .map-visualization svg {
+    margin-left: 0;
+    margin-right: 0;
+    flex: 1 1 0%;
+    display: block;
+  }
+  .continent-legend.legend-overlay {
+    position: absolute;
+    top: 50%;
+    right: 24px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: flex-start;
+    min-width: 180px;
+    background: #181818;
+    border-radius: 8px;
+    padding: 18px 18px 18px 18px;
+    border: 1px solid #333;
+    height: fit-content;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 2;
+    opacity: 0.97;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1em;
+    color: #e0e0e0;
+  }
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 2px solid #222;
+  }
+  @media (max-width: 900px) {
+    .continent-legend.legend-overlay {
+      position: static;
+      transform: none;
+      margin: 18px auto 0 auto;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+      width: 100%;
+      padding: 12px 0 0 0;
+      background: none;
+      border: none;
+      box-shadow: none;
     }
-    
-    .control-group {
+    .map-visualization {
       flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .stats-grid {
-      grid-template-columns: 1fr;
+      min-height: 520px;
     }
   }
-
   :global(.map-tooltip) {
     font-family: 'Arial', sans-serif;
   }
