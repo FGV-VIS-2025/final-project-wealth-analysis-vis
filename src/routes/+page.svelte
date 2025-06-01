@@ -2,7 +2,7 @@
   import AgeHistogram from '$lib/components/AgeHistogram.svelte';
   import CountryBarChart from '$lib/components/CountryBarChart.svelte';
   import GenderChart from '$lib/components/GenderChart.svelte';
-  import SelfMadePieChart from '$lib/components/SelfMadePieChart.svelte';
+  import SelfMadeBarChart from '$lib/components/SelfMadeBarChart.svelte';
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import { base } from '$app/paths';
@@ -446,7 +446,7 @@
         </div>
         <div class="gender-chart-area">
           {#if selfMadeDataFiltered.length > 0}
-            <SelfMadePieChart data={selfMadeDataFiltered} />
+            <SelfMadeBarChart data={selfMadeDataFiltered} />
             <div class="gender-insight">{selfMadeInsight}</div>
           {:else}
             <p class="loading-text">Carregando dados de self-made...</p>
