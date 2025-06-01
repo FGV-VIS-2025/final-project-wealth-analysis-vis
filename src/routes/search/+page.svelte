@@ -8,7 +8,7 @@
 
   let allData = [];
   let isLoading = true;
-   
+
   // Mapeamento de países para continentes para facilitar a filtragem regional
   const continentMap = {
     "United States": "América do Norte",

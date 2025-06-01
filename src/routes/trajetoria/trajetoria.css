@@ -113,14 +113,7 @@
 .nav-arrow:hover:not(:disabled) { background: #ffd700; color: #121212; border-color: #ffd700; }
 .nav-arrow:disabled { background: #2a2a2a; color: #666; cursor: not-allowed; border-color: #444; }
 
-.bar-chart {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
+.bar-chart { display: flex; flex-direction: column; gap: 18px; }
 
 .bar-item {
   position: relative;
@@ -133,10 +126,9 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Restaurar layout clássico do gráfico de barras */
 .bar-label {
-  font-weight: 500;
-  color: #e0e0e0;
+  font-weight: 500; 
+  color: #e0e0e0; 
   margin-bottom: 8px;
   font-size: 0.95em;
 }
@@ -145,23 +137,24 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  background: #2c2c2c;
+  background: #2c2c2c; 
   padding: 12px 15px;
   border: 1px solid #444;
   border-radius: 6px;
 }
 
 .bar {
-  height: 24px;
+  height: 24px; 
   border-radius: 4px;
-  min-width: 4px;
+  min-width: 1px;
+  max-width: 100%;
   transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bar-value {
   min-width: 80px;
   font-weight: 500;
-  color: #e0e0e0;
+  color: #e0e0e0; 
   font-size: 0.9em;
   text-align: right;
 }
@@ -318,10 +311,10 @@
 }
 
 #trajetoria-page-container .chart-area-wrapper .visualization-container {
-    flex-grow: 1;
-    overflow-y: visible;
-    padding-right: 10px;
-    margin-bottom: 10px;
+    flex-grow: 1; 
+    overflow-y: auto; 
+    padding-right: 10px; 
+    margin-bottom: 10px; 
 }
 
 #trajetoria-page-container .bar-chart { 
@@ -507,7 +500,6 @@
     margin-left: 0; 
 }
 
-/* Estilos para a seção do mapa de migração - tema escuro */
 #trajetoria-page-container .story-section.map-section {
     background: #1a1a1a;
     border: 1px solid #444;
@@ -515,21 +507,12 @@
     padding: 40px 20px;
     margin: 40px 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    margin-top: 40px;
 }
 
 #trajetoria-page-container .map-text-content {
     text-align: center;
-    max-width: 1100px;
-    margin: 40px auto 40px auto;
-    padding-top: 32px;
-}
-
-#trajetoria-page-container .map-text-content h1 {
-    color: #f5f5f5;
-    font-size: 2.2em;
-    margin-bottom: 20px;
-    font-weight: bold;
+    max-width: 800px;
+    margin: 0 auto 40px auto;
 }
 
 #trajetoria-page-container .map-text-content h2 {
@@ -595,47 +578,113 @@
     }
 }
 
-.bar-x-axis-wrapper {
-  width: 100%;
-  margin: 0;
-  position: relative;
+#trajetoria-page-container .story-section.radar-section {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 35px 25px;
+    margin: 40px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    min-height: 500px;
 }
-.bar-x-axis-line {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  height: 18px;
-  position: relative;
-  margin-bottom: 2px;
+
+#trajetoria-page-container .radar-text-content {
+    text-align: center;
+    margin-bottom: 25px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
-.bar-x-tick {
-  width: 0;
-  height: 14px;
-  border-left: 2px solid #bbb;
-  position: relative;
-  z-index: 2;
+
+#trajetoria-page-container .radar-text-content h2 {
+    color: #ffd700;
+    font-size: 2.0em;
+    font-weight: 700;
+    margin-bottom: 18px;
+    line-height: 1.2;
 }
-.bar-x-axis-line::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 7px;
-  height: 2px;
-  background: #bbb;
-  z-index: 1;
+
+#trajetoria-page-container .radar-text-content p {
+    color: #e0e0e0;
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 0;
+    text-align: center;
 }
-.bar-x-axis {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin: 4px 0 0 0;
-  width: 100%;
+
+#trajetoria-page-container .radar-container-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 450px;
+    padding: 0;
+    width: 100%;
 }
-.bar-x-label {
-  color: #e0e0e0;
-  font-size: 1em;
-  font-weight: 500;
+
+#trajetoria-page-container .loading-radar,
+#trajetoria-page-container .no-data-radar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    color: #b0b0b0;
+    font-size: 1.1em;
+    padding: 50px 20px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 1px solid #444;
+    width: 100%;
+    max-width: 500px;
+}
+
+#trajetoria-page-container .loading-radar .loading-spinner {
+    width: 35px;
+    height: 35px;
+    border: 3px solid #333;
+    border-top: 3px solid #ffd700;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@media (max-width: 1024px) {
+    #trajetoria-page-container .story-section.radar-section {
+        min-height: 550px;
+        padding: 35px 25px;
+    }
+    
+    #trajetoria-page-container .radar-container-wrapper {
+        min-height: 450px;
+    }
+}
+
+@media (max-width: 768px) {
+    #trajetoria-page-container .story-section.radar-section {
+        padding: 30px 20px;
+        margin: 30px 0;
+        min-height: 500px;
+    }
+    
+    #trajetoria-page-container .radar-text-content {
+        margin-bottom: 25px;
+    }
+    
+    #trajetoria-page-container .radar-text-content h2 {
+        font-size: 1.8em;
+        margin-bottom: 18px;
+    }
+    
+    #trajetoria-page-container .radar-text-content p {
+        font-size: 1.0em;
+        line-height: 1.5;
+    }
+    
+    #trajetoria-page-container .radar-container-wrapper {
+        min-height: 400px;
+    }
+    
+    #trajetoria-page-container .loading-radar,
+    #trajetoria-page-container .no-data-radar {
+        font-size: 1.0em;
+        padding: 40px 15px;
+    }
 }

@@ -18,34 +18,69 @@
 
     const svg = d3.select(svgElement)
       .attr('width', width)
-      .attr('height', height)
-      .append('g')
+      .attr('height', height);
+
+    const defs = svg.append('defs');
+    
+    const selfMadeGradient = defs.append('linearGradient')
+      .attr('id', 'gradient-selfmade')
+      .attr('x1', '0%').attr('y1', '0%')
+      .attr('x2', '100%').attr('y2', '0%');
+    
+    selfMadeGradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#10b981')
+      .attr('stop-opacity', 0.8);
+    
+    selfMadeGradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#10b981')
+      .attr('stop-opacity', 1);
+
+    const notSelfMadeGradient = defs.append('linearGradient')
+      .attr('id', 'gradient-notselfmade')
+      .attr('x1', '0%').attr('y1', '0%')
+      .attr('x2', '100%').attr('y2', '0%');
+    
+    notSelfMadeGradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#8b5cf6')
+      .attr('stop-opacity', 0.8);
+    
+    notSelfMadeGradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#8b5cf6')
+      .attr('stop-opacity', 1);
+
+    const chartGroup = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
     const x = d3.scaleBand()
       .range([0, innerWidth])
       .domain(data.map(d => d.label))
-      .padding(0.2);
+      .padding(0.3);
 
-    svg.append('g')
+    chartGroup.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x))
       .selectAll('text')
         .style('text-anchor', 'middle')
-        .style('fill', '#e0e0e0');
+        .style('fill', '#e0e0e0')
+        .style('font-size', '12px');
 
     const y = d3.scaleLinear()
       .domain([0, d3.max(data, d => d.value) || 10])
       .range([innerHeight, 0]);
 
-    svg.append('g')
+    chartGroup.append('g')
       .call(d3.axisLeft(y))
       .selectAll('text')
-        .style('fill', '#e0e0e0');
+        .style('fill', '#e0e0e0')
+        .style('font-size', '12px');
 
     const total = data.reduce((sum, d) => sum + d.value, 0);
 
-    svg.selectAll('rect')
+    const bars = chartGroup.selectAll('rect')
       .data(data)
       .join('rect')
       .attr('x', d => x(d.label))
@@ -53,11 +88,19 @@
       .attr('width', x.bandwidth())
       .attr('height', d => innerHeight - y(d.value))
       .attr('fill', d => {
-        if (d.label === 'Self-Made') return '#22c55e';
-        if (d.label === 'Não Self-Made') return '#f59e42';
+        if (d.label === 'Self-Made') return 'url(#gradient-selfmade)';
+        if (d.label === 'Não Self-Made') return 'url(#gradient-notselfmade)';
         return '#6b7280';
       })
-      .on('mousemove', (event, d) => {
+      .attr('stroke', 'rgba(255,255,255,0.2)')
+      .attr('stroke-width', 0.5)
+      .attr('rx', 6).attr('ry', 6)  // Bordas arredondadas
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event, d) {
+        d3.select(this).transition().duration(200)
+          .attr('opacity', 0.9)
+          .attr('stroke-width', 1)
+          .attr('stroke', '#ffffff');
         tooltip = {
           show: true,
           x: event.offsetX + 10,
@@ -67,24 +110,42 @@
           percent: ((d.value / total) * 100).toFixed(1)
         };
       })
-      .on('mouseleave', () => {
+      .on('mouseout', function() {
+        d3.select(this).transition().duration(200)
+          .attr('opacity', 1)
+          .attr('stroke-width', 0.5)
+          .attr('stroke', 'rgba(255,255,255,0.2)');
         tooltip = { show: false, x: 0, y: 0, label: '', value: 0, percent: 0 };
       });
 
-    svg.append('text')
+    chartGroup.selectAll('.bar-label')
+      .data(data)
+      .join('text')
+      .attr('class', 'bar-label')
+      .attr('x', d => x(d.label) + x.bandwidth() / 2)
+      .attr('y', d => y(d.value) - 8)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '12px')
+      .style('font-weight', 'bold')
+      .style('fill', '#e0e0e0')
+      .text(d => d.value.toLocaleString());
+
+    chartGroup.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', innerWidth / 2)
       .attr('y', innerHeight + margin.bottom - 10)
       .text('Origem da Fortuna')
-      .style('fill', '#e0e0e0');
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
 
-    svg.append('text')
+    chartGroup.append('text')
       .attr('text-anchor', 'middle')
       .attr('transform', 'rotate(-90)')
       .attr('y', -margin.left + 20)
       .attr('x', -innerHeight / 2)
       .text('Número de Bilionários')
-      .style('fill', '#e0e0e0');
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
   }
 
   onMount(() => {
@@ -130,30 +191,41 @@
   .chart-container {
     width: 100%;
     height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
   }
+  
   svg {
     max-width: 100%;
     max-height: 100%;
   }
+  
   .tooltip {
     position: absolute;
-    background: #222;
-    color: #ffd700;
-    padding: 10px 16px;
+    background: rgba(0, 0, 0, 0.95);
+    color: #e0e0e0;
+    padding: 12px 16px;
     border-radius: 8px;
-    font-size: 1em;
+    font-size: 13px;
     font-weight: 500;
     pointer-events: none;
     z-index: 10;
-    border: 1px solid #ffd700;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     left: 0;
     top: 0;
     transform: translate(-50%, -100%);
     white-space: nowrap;
+  }
+  
+  .tooltip span {
+    color: #ffd700;
   }
 </style> 

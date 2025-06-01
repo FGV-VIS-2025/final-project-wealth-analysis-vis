@@ -5,7 +5,7 @@
   import '../../app.css'; 
   import './trajetoria.css'; 
   import BillionaireMigrationMap from '$lib/components/BillionaireMigrationMap.svelte';
-  import { fade } from 'svelte/transition';
+  import CountryRadarChart from '$lib/components/CountryRadarChart.svelte';
 
   let allData = [];
   let currentView = 'wealth';
@@ -14,26 +14,14 @@
   let chartData = [];
   let isLoading = true;
   let hoveredItem = null;
-  let selectedCountrySelfMade = 'Todos';
-  let countryOptionsSelfMade = [];
-  let selfMadeDataFiltered = [];
-  let selfMadeInsight = '';
-  let selectedCountryAge = 'Todos';
-  let countryOptionsAge = [];
-  let ageDataFiltered = [];
-  let ageInsight = '';
 
   const views = [
     { key: 'wealth', label: 'Patrimônio por País', type: 'bar', color: '#ffd700' },
     { key: 'selfmade', label: 'Self-Made por País', type: 'bar', color: '#ffd700' },
-    { key: 'gender', label: 'Porcentagem de Mulheres Bilionárias por País', type: 'bar', color: '#ffd700' },
-    { key: 'age', label: 'Idade Média por País', type: 'bar', color: '#ffd700' },
-    { key: 'industries', label: 'Nº de Bilionários na Principal Indústria por País', type: 'bar', color: '#ffd700' }
+    { key: 'gender', label: 'Porcentagem de Mulheres Bilionárias por País', type: 'bar', color: '#ffd700' }
   ];
 
   let currentViewIndex = 0;
-
-  const xAxisTicks = [0, 1000, 2000, 3000, 4000, 5000];
 
   onMount(async () => {
     await loadData();
@@ -128,12 +116,6 @@
       case 'gender':
         chartData = getGenderByCountry();
         break;
-      case 'age':
-        chartData = getAgeByCountry();
-        break;
-      case 'industries':
-        chartData = getIndustriesByCountry();
-        break;
     }
   }
 
@@ -205,54 +187,6 @@
     return result;
   }
 
-  function getAgeByCountry() {
-    const topCountries = d3.rollups(allData, v => v.length, d => d.country)
-      .filter(([country]) => country && country !== 'Unknown')
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(d => d[0]);
-    
-    return topCountries.map(country => {
-      const countryData = allData.filter(d => d.country === country && d.age > 0);
-      const avgAge = countryData.length > 0 ? d3.mean(countryData, d => d.age) : 0;
-      
-      return {
-        label: country,
-        value: avgAge,
-        percentage: avgAge.toFixed(1),
-        displayValue: `${avgAge.toFixed(1)} anos`,
-        metadata: `${countryData.length} bilionários com idade conhecida`
-      };
-    }).sort((a, b) => b.value - a.value);
-  }
-
-  function getIndustriesByCountry() {
-    const topCountries = d3.rollups(allData, v => v.length, d => d.country)
-      .filter(([country]) => country && country !== 'Unknown')
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(d => d[0]);
-
-    return topCountries.map(country => {
-      const countryData = allData.filter(d => d.country === country);
-      const industries = countryData.flatMap(d => 
-        d.industries ? d.industries.split(',').map(i => i.trim()) : []
-      );
-      const topIndustryRollup = d3.rollups(industries, v => v.length, d => d)
-        .sort((a, b) => b[1] - a[1]);
-      
-      const topIndustry = topIndustryRollup.length > 0 ? topIndustryRollup[0] : null;
-      
-      return {
-        label: country,
-        value: topIndustry ? topIndustry[1] : 0,
-        percentage: countryData.length.toString(),
-        displayValue: topIndustry ? `${topIndustry[0]} (${topIndustry[1]})` : 'N/A',
-        metadata: topIndustry ? `${topIndustry[1]} bilionários nesta indústria de um total de ${countryData.length} no país` : `Sem dados de indústria para ${countryData.length} bilionários`
-      };
-    }).sort((a, b) => b.value - a.value);
-  }
-
   function nextView() {
     currentViewIndex = (currentViewIndex + 1) % views.length;
     currentView = views[currentViewIndex].key;
@@ -281,84 +215,8 @@
     window.location.href = targetPath;
   }
 
-  function updateSelfMadeInsight() {
-    if (!selfMadeDataFiltered.length) {
-      selfMadeInsight = '';
-      return;
-    }
-    const total = selfMadeDataFiltered.reduce((sum, d) => sum + d.count, 0);
-    const selfMade = selfMadeDataFiltered.find(d => d.label === 'Self-Made');
-    const notSelfMade = selfMadeDataFiltered.find(d => d.label === 'Não Self-Made');
-    const percentSelf = selfMade ? ((selfMade.count / total) * 100).toFixed(1) : '0.0';
-    const percentNot = notSelfMade ? ((notSelfMade.count / total) * 100).toFixed(1) : '0.0';
-    if (selectedCountrySelfMade === 'Todos') {
-      selfMadeInsight = `Globalmente, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são self-made.`;
-    } else {
-      selfMadeInsight = `No país selecionado, ${percentSelf}% dos bilionários são self-made e ${percentNot}% não são self-made.`;
-    }
-  }
-
-  function updateAgeInsight() {
-    if (!ageDataFiltered.length) {
-      ageInsight = '';
-      return;
-    }
-    const total = ageDataFiltered.reduce((sum, d) => sum + d.count, 0);
-    const weightedSum = ageDataFiltered.reduce((sum, d) => {
-      const [start] = d.ageGroup.split('-');
-      return sum + (parseInt(start) + 5) * d.count;
-    }, 0);
-    const avgAge = total > 0 ? (weightedSum / total).toFixed(1) : '0.0';
-    if (selectedCountryAge === 'Todos') {
-      ageInsight = `Globalmente, a idade média dos bilionários é ${avgAge} anos.`;
-    } else {
-      ageInsight = `No país selecionado, a idade média dos bilionários é ${avgAge} anos.`;
-    }
-  }
-
-  $: if (allData.length > 0) {
-    countryOptionsSelfMade = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
-    countryOptionsSelfMade.unshift('Todos');
-    countryOptionsAge = Array.from(new Set(allData.map(d => d.country).filter(Boolean))).sort();
-    countryOptionsAge.unshift('Todos');
-  }
-
-  $: if (selectedCountrySelfMade && allData.length > 0 && currentView === 'selfmade') {
-    if (selectedCountrySelfMade === 'Todos') {
-      const total = allData.length;
-      const selfMade = allData.filter(d => d.selfMade === true).length;
-      const notSelfMade = total - selfMade;
-      selfMadeDataFiltered = [
-        { label: 'Self-Made', count: selfMade },
-        { label: 'Não Self-Made', count: notSelfMade }
-      ];
-    } else {
-      const countryData = allData.filter(d => d.country === selectedCountrySelfMade);
-      const total = countryData.length;
-      const selfMade = countryData.filter(d => d.selfMade === true).length;
-      const notSelfMade = total - selfMade;
-      selfMadeDataFiltered = [
-        { label: 'Self-Made', count: selfMade },
-        { label: 'Não Self-Made', count: notSelfMade }
-      ];
-    }
-    updateSelfMadeInsight();
-  }
-
-  $: if (selectedCountryAge && allData.length > 0 && currentView === 'age') {
-    let filtered = allData;
-    if (selectedCountryAge !== 'Todos') {
-      filtered = allData.filter(d => d.country === selectedCountryAge);
-    }
-    ageDataFiltered = d3.rollups(filtered.filter(d => d.age && d.age > 0), v => v.length, d => Math.floor(d.age / 10) * 10)
-      .map(([key, value]) => ({ ageGroup: `${key}-${key+9}`, count: value }))
-      .sort((a,b) => parseInt(a.ageGroup) - parseInt(b.ageGroup));
-    updateAgeInsight();
-  }
-
   $: if (allData.length > 0) updateChart();
   $: currentViewData = views[currentViewIndex];
-  $: maxValue = Math.max(...chartData.map(d => d.value));
 </script>
 
 <svelte:head>
@@ -387,7 +245,7 @@
         <p>
             A riqueza total do mundo, em 2024, foi estimada em US$ 454,38 trilhões. 
             No entanto, a riqueza global está muito desequilibrada, com o 1% mais rico 
-            controlando quase dois terços da riqueza gerada desde 2020, enquanto o 
+            controlando quase dois terços da riqueza gerada since 2020, enquanto o 
             restante da população, cerca de 7 bilhões de pessoas, acumulou muito menos.
             É fato que podemos ver que os bilionários têm uma significância nessa desigualdade.
         </p>
@@ -416,63 +274,30 @@
             <button class="nav-arrow next-arrow" on:click={nextView} disabled={isLoading}>→</button>
           </div>
           
-          {#if currentView === 'selfmade'}
-            <!-- filtro removido -->
-          {/if}
-          {#if currentView === 'age'}
-            <!-- filtro removido -->
-          {/if}
-          <div class="visualization-container">
-            {#if currentView === 'age'}
-              {#key currentView}
-                {#each chartData as item, i}
-                  <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
-                    <div class="bar-label">{item.label}</div>
-                    <div class="bar-container">
-                      <div class="bar" style="width: {(item.value / maxValue) * 100}%; background: {currentViewData.color};"></div>
-                      <div class="bar-value">{item.displayValue}</div>
-                    </div>
-                  </div>
-                {/each}
-              {/key}
-            {:else if !isLoading && chartData.length > 0}
-              {#key currentView}
-                {#each chartData as item, i}
-                  <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
-                    <div class="bar-label">
-                      {item.label}
-                      {#if currentView === 'industries'}
-                        {#if item.displayValue && item.displayValue !== 'N/A'}
-                          {' (' + item.displayValue.split(' (')[0] + ')'}
-                        {/if}
-                      {/if}
-                    </div>
-                    <div class="bar-container">
-                      {#if currentView === 'wealth'}
-                        <div class="bar" style="width: {(item.value / 5000000) * 100}%; background: {currentViewData.color};"></div>
+          {#if !isLoading && chartData.length > 0}
+            <div class="visualization-container">
+              {#if currentViewData.type === 'bar'}
+                <div class="bar-chart">
+                  {#each chartData as item, i}
+                    <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
+                      <div class="bar-label">{item.label}</div>
+                      <div class="bar-container">
+                        <div class="bar" style="width: {(item.value / (d3.max(chartData, d => d.value) || 1)) * 100}%; background: {currentViewData.color};"></div>
                         <div class="bar-value">{item.displayValue}</div>
-                      {:else if currentView === 'selfmade' || currentView === 'gender'}
-                        <div class="bar" style="width: {item.value}%; background: {currentViewData.color};"></div>
-                        <div class="bar-value">{item.displayValue}</div>
-                      {:else if currentView === 'age'}
-                        <!-- nunca cai aqui, pois já tratamos acima -->
-                      {:else if currentView === 'industries'}
-                        <div class="bar" style="width: {(item.value / 200) * 100}%; background: {currentViewData.color};"></div>
-                        <div class="bar-value">{item.value}</div>
-                      {/if}
+                      </div>
                     </div>
-                  </div>
-                {/each}
-              {/key}
-            {:else if isLoading}
-              <div class="loading-chart">
-                <div class="loading-spinner"></div>
-                <span>Carregando visualização...</span>
-              </div>
-            {:else}
-              <div class="no-data">Nenhum dado disponível</div>
-            {/if}
-          </div>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+          {:else if isLoading}
+            <div class="loading-chart">
+              <div class="loading-spinner"></div>
+              <span>Carregando visualização...</span>
+            </div>
+          {:else}
+            <div class="no-data">Nenhum dado disponível</div>
+          {/if}
         </div>
       </div>
     </div>
@@ -481,7 +306,7 @@
   <!-- Seção do Mapa de Migração de Bilionários -->
   <section class="story-section full-width map-section">
     <div class="map-text-content">
-      <h1>Fluxos Migratórios da Elite Global</h1>
+      <h2>Fluxos Migratórios da Elite Global</h2>
       <p>
         A riqueza transcende fronteiras. Este mapa revela os padrões migratórios dos bilionários, 
         mostrando como a elite financeira se move pelo mundo. Cada círculo representa a concentração 
@@ -500,6 +325,31 @@
         </div>
       {:else}
         <div class="no-data-map">Nenhum dado disponível para o mapa</div>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Nova Seção do Gráfico Radar -->
+  <section class="story-section full-width radar-section">
+    <div class="radar-text-content">
+      <h2>Raio-X dos Países com Maior Concentração de Bilionários</h2>
+      <p>
+        Que fatores diferenciam os países que concentram mais bilionários? Este gráfico radar compara 
+        cinco indicadores: riqueza total, PIB, expectativa de vida, carga tributária e 
+        índice de corrupção. Selecione países para comparar seus perfis multidimensionais.
+      </p>
+    </div>
+    
+    <div class="radar-container-wrapper">
+      {#if !isLoading && allData.length > 0}
+        <CountryRadarChart data={allData} />
+      {:else if isLoading}
+        <div class="loading-radar">
+          <div class="loading-spinner"></div>
+          <span>Carregando análise...</span>
+        </div>
+      {:else}
+        <div class="no-data-radar">Nenhum dado disponível</div>
       {/if}
     </div>
   </section>
