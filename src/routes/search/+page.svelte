@@ -89,9 +89,13 @@
       <div class="text-column">
         <h1>Explore os Dados dos Bilionários</h1>
         <p class="intro-text">
-          Se você ficou interessado e quer filtrar da forma que você quiser os bilionários, 
-          deixamos acessível para todos uma ferramenta de busca, que visa democratizar 
-          a informação sobre as pessoas mais ricas do mundo.
+          Ao longo desta análise, buscamos desvendar as múltiplas facetas que definem o perfil dos bilionários. Mergulhamos nos dados para ir além dos números, estimulando um olhar crítico sobre a impressionante concentração de riqueza e os padrões complexos que emergem.
+        </p>
+        <p class="intro-text">
+          As tendências e observações que apresentamos aqui servem como um ponto de partida, um panorama inicial que revela tanto a magnitude quanto as nuances deste estrato econômico. Compreendemos que, embora os agregados e as médias ofereçam insights valiosos, a verdadeira profundidade da compreensão muitas vezes reside nos detalhes e na capacidade de investigar questões específicas.
+        </p>
+        <p class="intro-text">
+          Se as nossas conclusões despertaram sua curiosidade, se você deseja investigar um setor industrial específico, comparar a riqueza em diferentes regiões ou simplesmente filtrar os dados para satisfazer seu próprio questionamento, o poder agora está em suas mãos. Encorajamos você a utilizar os filtros, cruzar informações, testar hipóteses e, quem sabe, descobrir novos padrões que complementem ou até mesmo desafiem o que foi apresentado.
         </p>
       </div>
       <div class="search-tool-column">
