@@ -11,8 +11,8 @@
   let selectedGender = 'Todos';
   let showStatisticsPanel = false;
   
-  const width = 1000;
-  const height = 500;
+  const width = 900;
+  const height = 450;
   
   // Mapeamento de países para continentes
   const countryToContinentMap = {
@@ -225,7 +225,7 @@
     }
 
     const projection = d3.geoNaturalEarth1()
-      .scale(170)
+      .scale(150)
       .translate([width / 2, height / 2]);
 
     const countryData = worldCountries
