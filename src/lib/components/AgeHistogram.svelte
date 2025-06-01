@@ -73,7 +73,7 @@
         .attr('text-anchor', 'middle')
         .attr('x', innerWidth / 2)
         .attr('y', innerHeight + margin.bottom - 10)
-        .text('Age Group')
+        .text('Idade')
         .style('fill', '#e0e0e0');
 
     svg.append('text')
@@ -81,7 +81,7 @@
         .attr('transform', 'rotate(-90)')
         .attr('y', -margin.left + 20)
         .attr('x', -innerHeight / 2)
-        .text('Number of Billionaires')
+        .text('Número de Bilionários')
         .style('fill', '#e0e0e0');
   }
 
