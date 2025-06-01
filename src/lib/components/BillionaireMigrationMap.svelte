@@ -468,7 +468,7 @@
     </div>
     
     <div class="continent-legend">
-      <label>Legenda de Continentes:</label>
+      <span class="legend-label">Legenda de Continentes:</span>
       <div class="legend-items">
         {#each Object.entries(continentColors) as [continent, color]}
           <div class="legend-item">
@@ -647,7 +647,7 @@
     gap: 10px;
   }
 
-  .continent-legend label {
+  .continent-legend span.legend-label {
     font-size: 14px;
     color: #e0e0e0;
     font-weight: 500;

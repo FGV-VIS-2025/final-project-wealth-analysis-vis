@@ -282,7 +282,11 @@
                     <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
                       <div class="bar-label">{item.label}</div>
                       <div class="bar-container">
-                        <div class="bar" style="width: {(item.value / (d3.max(chartData, d => d.value) || 1)) * 100}%; background: {currentViewData.color};"></div>
+                        <div class="bar" style="width: {
+                          currentView === 'gender' || currentView === 'selfmade' 
+                            ? (item.value / 100) * 100 
+                            : (item.value / (d3.max(chartData, d => d.value) || 1)) * 100
+                        }%; background: {currentViewData.color};"></div>
                         <div class="bar-value">{item.displayValue}</div>
                       </div>
                     </div>
