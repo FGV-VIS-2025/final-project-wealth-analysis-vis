@@ -112,9 +112,10 @@
     <div class="text-content centered-content">
       <h1>Análise Global de Bilionários</h1>
       <p>
-        Nesta página, tentamos desvendar o que define o perfil de um bilionário.
-        Mergulhamos nos dados para expor não apenas números, mas para estimular um olhar crítico sobre
-        a concentração de riqueza e os padrões que emergem, como as disparidades de gênero e a distribuição geográfica do capital.
+        Estamos vivendo um momento singular em nossa história: pela primeira vez, observamos uma fuga en masse de bilionários dos Estados Unidos para outros países, especialmente para seu principal rival geopolítico, a China. Por outro lado, desde a pandemia, a disparidade de riqueza entre as classes sociais se aprofundou a tal ponto que, mesmo entre os bilionários, já se pode identificar uma elite ainda mais exclusiva.
+      </p>
+      <p>
+        Diante disso, torna-se evidente que a estrutura interna dessas camadas ultrarricas é complexa. Nosso objetivo, portanto, é traçar paralelos com o mundo que conhecemos para, por meio do contraste, compreendermos melhor a dinâmica desse segmento exclusivo da sociedade.
       </p>
     </div>
   </section>
@@ -123,13 +124,10 @@
     <div class="text-content left">
       <h2>Gênero e a Elite Financeira: Um Clube Exclusivo?</h2>
       <p>
-        Como o gênero se reflete no topo da pirâmide financeira? Esta seção deixa claro a 
-        representação de diferentes gêneros na população bilionária. O gráfico não mente:
-        a disparidade é evidente.
+        A primeira característica dessa classe é a disparidade de patrimônio entre os sexos. Em geral, a proporção de bilionários self-made é semelhante, o que invalida a conjectura de que muitas mulheres, diferentemente dos homens, herdaram suas fortunas. 
       </p>
       <p>
-        Estes dados são um convite à reflexão: quais são as barreiras sistêmicas e culturais 
-        que perpetuam essa desigualdade no acesso à riqueza e ao poder econômico?
+        Ademais, observamos que tanto os Estados Unidos quanto a China lideram os rankings para ambos os sexos, o que evidencia que há um tratamento relativamente equilibrado, especialmente na China, onde essa transformação teve início ainda no regime de Mao Tsé-Tung, com sua famosa frase: “As mulheres sustentam metade do céu.”
       </p>
     </div>
     <div class="chart-content right">
@@ -152,14 +150,12 @@
     <div class="text-content right">
       <h2>A Geografia da Riqueza Extrema: Onde o Capital se Concentra?</h2>
       <p>
-        Onde, no mundo, os bilionários fincam suas raízes – e suas fortunas? Este gráfico 
-        destaca os países com o maior número deles, oferecendo uma perspectiva geográfica da 
-        gritante concentração de riqueza e, por consequência, de poder.
+        Seguindo nossa narrativa, não é surpreendente que a maior concentração de bilionários resida nas duas maiores potências econômicas mundiais. Ainda assim, observamos que a Europa também possui um destaque significativo. No geral, percebe-se que grande parte do continente asiático, da África e da América Latina não está bem representada.
       </p>
       <p>
-        Note a dominância de certas nações. Quais fatores econômicos, políticos e históricos 
-        você acredita que alimentam essa distribuição tão desigual de capital global?
+        Algumas indagações podem ser levantadas: será que isso está relacionado à fuga desses indivíduos para outros países? E quais são as características desses países de destino?
       </p>
+
     </div>
   </section>
 
@@ -167,13 +163,7 @@
     <div class="text-content left">
       <h2>A Idade da Riqueza: Quando o Capital Atinge o Ápice?</h2>
       <p>
-        A distribuição de bilionários por faixa etária revela mais do que simples números; 
-        ela pode indicar os mecanismos e o tempo necessário para a acumulação extrema de capital.
-        Este histograma expõe a contagem de bilionários em diferentes fases da vida.
-      </p>
-      <p>
-        Observamos certas concentrações: seriam estes os "anos dourados" do empreendedorismo agressivo, 
-        o auge da especulação financeira ou o reflexo de fortunas herdadas se consolidando?
+        Por fim, vale salientar que, em geral, a faixa etária de pico de riqueza ocorre por volta dos 65 anos. No entanto, esse padrão não se mantém uniforme em todos os setores. Em particular, o setor de tecnologia se destaca por sua grande assimetria: é conhecido por gerar magnatas praticamente da noite para o dia.
       </p>
     </div>
     <div class="chart-content right">

@@ -257,10 +257,7 @@
     <div class="map-text-content">
       <h2>Fluxos Migratórios da Elite Global</h2>
       <p>
-        A riqueza transcende fronteiras. Este mapa revela os padrões migratórios dos bilionários, 
-        mostrando como a elite financeira se move pelo mundo. Cada círculo representa a concentração 
-        de bilionários por país, enquanto as setas douradas indicam os fluxos migratórios mais significativos 
-        entre nações de nascimento e residência atual.
+        Retomando a indagação feita na seção de análise por país, esta visualização revela que países como Brasil, Canadá, Suécia, Noruega, Austrália, entre outros, registram a saída de muitos de seus bilionários.        É razoável supor que o motivo esteja relacionado à alta carga tributária. Diante disso, muitos magnatas optam por migrar para regiões com políticas tributárias mais flexíveis, em busca de um ambiente financeiro menos hostil.
       </p>
     </div>
     
@@ -283,9 +280,7 @@
     <div class="radar-text-content">
       <h2>Raio-X dos Países com Maior Concentração de Bilionários</h2>
       <p>
-        Que fatores diferenciam os países que concentram mais bilionários? Este gráfico radar compara 
-        cinco indicadores: riqueza total, PIB, expectativa de vida, carga tributária e 
-        índice de corrupção. Selecione países para comparar seus perfis multidimensionais.
+        Para validar nossa hipótese, analisemos as estatísticas dos países com maior concentração de indivíduos dessa classe. Em geral, observa-se que ou o país possui uma carga tributária reduzida, ou, quando há alta tributação, ela é acompanhada por uma moeda desvalorizada e índices de inflação elevados. Raramente se observa um padrão fora dessas duas categorias.
       </p>
     </div>
     
