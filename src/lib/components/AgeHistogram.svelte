@@ -1,9 +1,12 @@
 <script>
-  export let data = []; 
+  export let data = []; // Agora espera dados brutos dos bilionários
   import { onMount, afterUpdate } from 'svelte';
   import * as d3 from 'd3';
 
   let svgElement, tooltip;
+  let selectedIndustry = 'Todos';
+  let industries = ['Todos'];
+  let filteredData = []; // Dados filtrados por indústria
   
   const margin = { top: 60, right: 40, bottom: 80, left: 80 };
   let width = 600, height = 380;
@@ -13,87 +16,227 @@
   const ageGroupOrder = ['10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-99', '100-109'];
   const uniformColor = '#6366f1';
 
-  $: processedData = data
-    .filter(d => d.ageGroup && d.count > 0)
-    .sort((a, b) => ageGroupOrder.indexOf(a.ageGroup) - ageGroupOrder.indexOf(b.ageGroup))
-    .map(d => ({ ...d, color: uniformColor }));
+  // Extrair indústrias dos dados (similar ao mapa de migração)
+  function extractFilters() {
+    const industriesSet = new Set();
+    
+    data.forEach(person => {
+      if (person.industries) industriesSet.add(person.industries);
+    });
+    
+    industries = ['Todos', ...Array.from(industriesSet).sort()];
+    console.log('AgeHistogram - Industries extracted:', industries);
+  }
+
+  // Filtrar dados por indústria (similar ao mapa de migração)
+  function updateFilteredData() {
+    if (!data || data.length === 0) {
+      filteredData = [];
+      return;
+    }
+    
+    filteredData = data.filter(person => {
+      let industryMatch = false;
+      if (selectedIndustry === 'Todos') {
+        industryMatch = true;
+      } else if (person.industries) {
+        industryMatch = person.industries.toString().trim() === selectedIndustry.toString().trim();
+      }
+      
+      return industryMatch;
+    });
+    
+    console.log('AgeHistogram - Filtered data:', filteredData.length, 'of', data.length);
+  }
+
+  // Agrupar dados filtrados por faixa etária
+  function processAgeGroups() {
+    const ageGroups = {};
+    ageGroupOrder.forEach(group => {
+      ageGroups[group] = 0;
+    });
+    
+    filteredData.forEach(person => {
+      if (person.age) {
+        const age = parseInt(person.age);
+        if (age >= 10 && age < 20) ageGroups['10-19']++;
+        else if (age >= 20 && age < 30) ageGroups['20-29']++;
+        else if (age >= 30 && age < 40) ageGroups['30-39']++;
+        else if (age >= 40 && age < 50) ageGroups['40-49']++;
+        else if (age >= 50 && age < 60) ageGroups['50-59']++;
+        else if (age >= 60 && age < 70) ageGroups['60-69']++;
+        else if (age >= 70 && age < 80) ageGroups['70-79']++;
+        else if (age >= 80 && age < 90) ageGroups['80-89']++;
+        else if (age >= 90 && age < 100) ageGroups['90-99']++;
+        else if (age >= 100 && age < 110) ageGroups['100-109']++;
+      }
+    });
+    
+    return Object.entries(ageGroups)
+      .map(([ageGroup, count]) => ({ ageGroup, count, color: uniformColor }))
+      .filter(d => d.count > 0)
+      .sort((a, b) => ageGroupOrder.indexOf(a.ageGroup) - ageGroupOrder.indexOf(b.ageGroup));
+  }
+
+  // Inicializar quando os dados chegarem
+  $: if (data.length > 0) {
+    console.log('AgeHistogram - Data received:', data.length, 'billionaires');
+    extractFilters();
+    updateFilteredData();
+  }
+
+  // Reagir a mudanças no filtro de indústria
+  $: if (selectedIndustry && data.length > 0) {
+    updateFilteredData();
+  }
+
+  // Processar dados para o gráfico
+  $: processedData = filteredData.length > 0 ? processAgeGroups() : [];
 
   $: totalBillionaires = d3.sum(processedData, d => d.count);
   $: dataWithStats = processedData.map(d => ({
     ...d,
-    percentage: ((d.count / totalBillionaires) * 100).toFixed(1)
+    percentage: totalBillionaires > 0 ? ((d.count / totalBillionaires) * 100).toFixed(1) : '0'
   }));
 
+  // Redesenhar quando processedData mudar
+  $: if (processedData && svgElement) {
+    drawChart();
+  }
+
   function drawChart() {
-    if (!svgElement || dataWithStats.length === 0) return;
+    if (!svgElement || processedData.length === 0) return;
 
     d3.select(svgElement).selectAll('*').remove();
 
-    const svg = d3.select(svgElement).attr('width', width).attr('height', height);
+    const svg = d3.select(svgElement)
+      .attr('width', width)
+      .attr('height', height);
 
     svg.append('text')
-      .attr('x', width / 2).attr('y', 30).attr('text-anchor', 'middle')
-      .style('font-size', '18px').style('font-weight', 'bold').style('fill', '#e0e0e0')
-      .text('Distribuição de Idades dos Bilionários');
+      .attr('x', width / 2)
+      .attr('y', 30)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '18px')
+      .style('font-weight', 'bold')
+      .style('fill', '#e0e0e0')
+      .text('Distribuição de Bilionários por Idade');
 
-    const chartGroup = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    const chartGroup = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleBand().range([0, innerWidth]).domain(dataWithStats.map(d => d.ageGroup)).padding(0.2);
-    const y = d3.scaleLinear().domain([0, d3.max(dataWithStats, d => d.count) || 10]).range([innerHeight, 0]);
+    const x = d3.scaleBand()
+      .range([0, innerWidth])
+      .domain(ageGroupOrder.filter(age => processedData.some(d => d.ageGroup === age)))
+      .padding(0.2);
 
-    chartGroup.append('g').attr('transform', `translate(0,${innerHeight})`).call(d3.axisBottom(x))
-      .selectAll('text').style('fill', '#e0e0e0').style('font-size', '12px');
+    chartGroup.append('g')
+      .attr('transform', `translate(0,${innerHeight})`)
+      .call(d3.axisBottom(x))
+      .selectAll('text')
+        .style('fill', '#e0e0e0')
+        .style('font-size', '12px');
 
-    chartGroup.append('g').call(d3.axisLeft(y).tickFormat(d3.format('d')))
-      .selectAll('text').style('fill', '#e0e0e0');
+    const maxValue = d3.max(processedData, d => d.count) || 10;
+    const y = d3.scaleLinear()
+      .domain([0, maxValue])
+      .range([innerHeight, 0]);
 
-    const bars = chartGroup.selectAll('.age-bar').data(dataWithStats).join('rect')
+    // Gerar ticks mais proporcionais incluindo o valor máximo
+    const tickCount = Math.min(6, Math.floor(maxValue / 20) + 1);
+    const tickValues = y.ticks(tickCount);
+    
+    // Sempre incluir o valor máximo se não estiver muito próximo do último tick
+    if (!tickValues.includes(maxValue) && (maxValue - tickValues[tickValues.length - 1]) > maxValue * 0.1) {
+      tickValues.push(maxValue);
+    }
+
+    chartGroup.append('g')
+      .call(d3.axisLeft(y).tickFormat(d3.format('d')).tickValues(tickValues))
+      .selectAll('text')
+        .style('fill', '#e0e0e0');
+
+    const bars = chartGroup.selectAll('.age-bar')
+      .data(processedData)
+      .join('rect')
       .attr('class', 'age-bar')
-      .attr('x', d => x(d.ageGroup)).attr('y', innerHeight).attr('width', x.bandwidth()).attr('height', 0)
-      .attr('fill', d => d.color).attr('stroke', 'rgba(255,255,255,0.3)').attr('stroke-width', 1)
+      .attr('x', d => x(d.ageGroup))
+      .attr('y', innerHeight)
+      .attr('width', x.bandwidth())
+      .attr('height', 0)
+      .attr('fill', uniformColor)
+      .attr('stroke', 'rgba(255,255,255,0.2)')
+      .attr('stroke-width', 1)
+      .attr('rx', 4)
+      .attr('ry', 4)
       .style('cursor', 'pointer');
 
-    bars.transition().duration(800).delay((d, i) => i * 80)
-      .attr('y', d => y(d.count)).attr('height', d => innerHeight - y(d.count));
+    bars.transition()
+      .duration(800)
+      .delay((d, i) => i * 100)
+      .attr('y', d => y(d.count))
+      .attr('height', d => innerHeight - y(d.count));
 
-    const labels = chartGroup.selectAll('.value-label').data(dataWithStats).join('text')
-      .attr('class', 'value-label')
-      .attr('x', d => x(d.ageGroup) + x.bandwidth() / 2).attr('y', innerHeight).attr('text-anchor', 'middle')
-      .style('font-weight', 'bold').style('font-size', '12px').style('opacity', 0);
+    const labels = chartGroup.selectAll('.age-label')
+      .data(processedData)
+      .join('text')
+      .attr('class', 'age-label')
+      .attr('x', d => x(d.ageGroup) + x.bandwidth() / 2)
+      .attr('y', innerHeight)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#fff')
+      .style('font-weight', 'bold')
+      .style('font-size', '12px')
+      .style('opacity', 0);
 
-    labels.transition().duration(800).delay((d, i) => i * 80 + 400).style('opacity', 1)
-      .attr('y', d => {
-        const barHeight = innerHeight - y(d.count);
-        return barHeight < 25 ? y(d.count) - 8 : y(d.count) + 16;
-      })
-      .style('fill', d => {
-        const barHeight = innerHeight - y(d.count);
-        return barHeight < 25 ? '#e0e0e0' : '#ffffff';
-      })
+    labels.transition()
+      .duration(800)
+      .delay((d, i) => i * 100 + 400)
+      .attr('y', d => y(d.count) - 8)
+      .style('opacity', 1)
       .text(d => d.count.toLocaleString());
 
-    const percentLabels = chartGroup.selectAll('.percent-label')
-      .data(dataWithStats.filter(d => (innerHeight - y(d.count)) >= 40))
-      .join('text').attr('class', 'percent-label')
-      .attr('x', d => x(d.ageGroup) + x.bandwidth() / 2).attr('y', d => y(d.count) + 32).attr('text-anchor', 'middle')
-      .style('fill', 'rgba(255,255,255,0.8)').style('font-weight', 'bold').style('font-size', '10px').style('opacity', 0);
-
-    percentLabels.transition().duration(800).delay((d, i) => i * 80 + 600).style('opacity', 1).text(d => `${d.percentage}%`);
-
-    bars.on('mouseover', function(event, d) {
-        d3.select(this).transition().duration(200).attr('opacity', 0.8).attr('stroke-width', 3);
+    bars
+      .on('mouseover', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('opacity', 0.8)
+          .attr('stroke-width', 2)
+          .attr('stroke', '#ffffff');
+        
         showTooltip(event, d);
       })
       .on('mouseout', function() {
-        d3.select(this).transition().duration(200).attr('opacity', 1).attr('stroke-width', 1);
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('opacity', 1)
+          .attr('stroke-width', 1)
+          .attr('stroke', 'rgba(255,255,255,0.2)');
+        
         hideTooltip();
       })
-      .on('mousemove', function(event) { updateTooltipPosition(event); });
+      .on('mousemove', function(event) {
+        updateTooltipPosition(event);
+      });
 
-    chartGroup.append('text').attr('text-anchor', 'middle').attr('x', innerWidth / 2).attr('y', innerHeight + 40)
-      .text('Faixa Etária').style('fill', '#e0e0e0').style('font-size', '14px');
-    chartGroup.append('text').attr('text-anchor', 'middle').attr('transform', 'rotate(-90)')
-      .attr('y', -50).attr('x', -innerHeight / 2).text('Número de Bilionários').style('fill', '#e0e0e0').style('font-size', '14px');
+    chartGroup.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', innerWidth / 2)
+      .attr('y', innerHeight + 50)
+      .text('Faixa Etária')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
+
+    chartGroup.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -50)
+      .attr('x', -innerHeight / 2)
+      .text('Número de Bilionários')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
   }
 
   function showTooltip(event, d) {
@@ -143,6 +286,25 @@
 </script>
 
 <div class="chart-wrapper">
+  {#if industries.length > 0}
+    <div class="controls-panel">
+      <div class="control-group">
+        <label for="industry-select">Filtro por Indústria:</label>
+        <select id="industry-select" bind:value={selectedIndustry}>
+          {#each industries as industry}
+            <option value={industry}>{industry}</option>
+          {/each}
+        </select>
+      </div>
+      <div class="filter-info">
+        <span class="total-count">Total: {totalBillionaires} bilionários</span>
+        {#if selectedIndustry !== 'Todos'}
+          <span class="filter-active">Filtro ativo: {selectedIndustry}</span>
+        {/if}
+      </div>
+    </div>
+  {/if}
+  
   <div class="chart-container" bind:clientWidth={width} bind:clientHeight={height}>
     <svg bind:this={svgElement}></svg>
   </div>
@@ -158,6 +320,68 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
+  .controls-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 15px 20px;
+    background: #2a2a2a;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #444;
+    flex-wrap: wrap;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .control-group label {
+    font-size: 14px;
+    color: #e0e0e0;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  select {
+    padding: 8px 12px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    font-size: 14px;
+    min-width: 180px;
+    cursor: pointer;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  }
+
+  .filter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-end;
+  }
+
+  .total-count {
+    color: #6366f1;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .filter-active {
+    color: #ffd700;
+    font-size: 12px;
+    font-style: italic;
+  }
+
   .chart-container {
     width: 100%;
     height: 380px;
@@ -171,5 +395,24 @@
   @media (max-width: 768px) {
     .chart-wrapper { padding: 15px; }
     .chart-container { height: 320px; }
+    
+    .controls-panel {
+      flex-direction: column;
+      gap: 15px;
+      align-items: stretch;
+    }
+    
+    .control-group {
+      justify-content: center;
+    }
+    
+    .filter-info {
+      align-items: center;
+      text-align: center;
+    }
+    
+    select {
+      min-width: 200px;
+    }
   }
 </style> 

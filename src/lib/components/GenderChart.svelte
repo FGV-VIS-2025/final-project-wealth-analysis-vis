@@ -9,6 +9,7 @@
   let showBreakdown = false;
   let selectedGender = null;
   let breakdownData = [];
+  let breakdownType = 'country'; // 'country' ou 'selfmade'
   
   const margin = { top: 60, right: 30, bottom: 80, left: 80 };
   let width = 550;
@@ -28,6 +29,19 @@
       label: 'Feminino', 
       icon: '♀',
       lightColor: '#f87171'
+    }
+  };
+
+  const selfMadeConfig = {
+    true: {
+      color: '#10b981',
+      label: 'Self-Made',
+      lightColor: '#34d399'
+    },
+    false: {
+      color: '#8b5cf6',
+      label: 'Não Self-Made',
+      lightColor: '#a78bfa'
     }
   };
 
@@ -56,23 +70,64 @@
       .slice(0, limit);
   }
 
-  function drawChart() {
-    if (!svgElement || dataWithPercentage.length === 0) return;
+  function getSelfMadeByGender(gender) {
+    if (!allData || allData.length === 0) return [];
+    
+    const selfMadeCounts = {};
+    
+    allData.forEach(person => {
+      if (person.gender === gender) {
+        const isSelfMade = person.selfMade === 'TRUE' || person.selfMade === 'True' || person.selfMade === 'true' || person.selfMade === true;
+        const key = isSelfMade ? 'true' : 'false';
+        selfMadeCounts[key] = (selfMadeCounts[key] || 0) + 1;
+      }
+    });
 
+    return Object.entries(selfMadeCounts)
+      .map(([isSelfMade, count]) => ({ 
+        isSelfMade: isSelfMade === 'true',
+        count, 
+        gender,
+        label: isSelfMade === 'true' ? 'Self-Made' : 'Não Self-Made'
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  function drawChart() {
+    if (!svgElement) return;
+    
+    // Se não temos dados principais mas temos breakdown, usar breakdown
+    if (!dataWithPercentage || dataWithPercentage.length === 0) {
+      if (!showBreakdown || !breakdownData || breakdownData.length === 0) {
+        return;
+      }
+    }
+
+    // Limpar o SVG completamente antes de desenhar
     d3.select(svgElement).selectAll('*').remove();
 
+    // Garantir que o SVG tenha as dimensões corretas
     const svg = d3.select(svgElement)
       .attr('width', width)
       .attr('height', height);
 
+    let titleText = 'Distribuição por Gênero';
+    if (showBreakdown) {
+      if (breakdownType === 'country') {
+        titleText = `Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} por País`;
+      } else {
+        titleText = `Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} - Self-Made vs Não Self-Made`;
+      }
+    }
+
     svg.append('text')
       .attr('x', width / 2)
-      .attr('y', 30)
+      .attr('y', 25)
       .attr('text-anchor', 'middle')
       .style('font-size', '18px')
       .style('font-weight', 'bold')
       .style('fill', '#e0e0e0')
-      .text(showBreakdown ? `Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} por País` : 'Distribuição por Gênero');
+      .text(titleText);
 
     const chartGroup = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -80,7 +135,11 @@
     const currentData = showBreakdown ? breakdownData : dataWithPercentage;
 
     if (showBreakdown) {
-      drawBreakdownChart(chartGroup, currentData);
+      if (breakdownType === 'country') {
+        drawBreakdownChart(chartGroup, currentData);
+      } else {
+        drawSelfMadeChart(chartGroup, currentData);
+      }
     } else {
       drawMainChart(chartGroup, currentData);
     }
@@ -118,14 +177,27 @@
           .text(d.config.label);
       });
 
+    const maxValue = d3.max(data, d => d.count) || 10;
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.count) || 10])
+      .domain([0, maxValue])
       .range([innerHeight, 0]);
 
-    svg.append('g')
-      .call(d3.axisLeft(y).tickFormat(d3.format('d')))
-      .selectAll('text')
-        .style('fill', '#e0e0e0');
+    // Gerar ticks mais proporcionais
+    const tickCount = Math.min(5, Math.floor(maxValue / 500) + 1);
+    const tickValues = y.ticks(tickCount);
+    
+    // Sempre incluir o valor máximo se não estiver muito próximo do último tick
+    if (!tickValues.includes(maxValue) && (maxValue - tickValues[tickValues.length - 1]) > maxValue * 0.1) {
+      tickValues.push(maxValue);
+    }
+
+    const yAxis = svg.append('g')
+      .call(d3.axisLeft(y)
+        .tickFormat(d3.format('d'))
+        .tickValues(tickValues));
+    
+    yAxis.selectAll('text')
+      .style('fill', '#e0e0e0');
 
     const bars = svg.selectAll('.main-bar')
       .data(data)
@@ -202,14 +274,6 @@
         
         hideTooltip();
       })
-      .on('click', function(event, d) {
-        if (allData && allData.length > 0) {
-          selectedGender = d.gender;
-          breakdownData = getTopCountriesByGender(d.gender);
-          showBreakdown = true;
-          drawChart();
-        }
-      })
       .on('mousemove', function(event) {
         updateTooltipPosition(event);
       });
@@ -236,15 +300,20 @@
         .style('fill', '#e0e0e0')
         .style('font-size', '12px');
 
+    const maxValue = d3.max(data, d => d.count) || 10;
     const x = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.count) || 10])
+      .domain([0, maxValue])
       .range([0, innerWidth]);
 
-    svg.append('g')
+    const xAxis = svg.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format('d')))
-      .selectAll('text')
-        .style('fill', '#e0e0e0');
+      .call(d3.axisBottom(x)
+        .tickFormat(d3.format('d'))
+        .ticks(6)
+        .tickValues(x.ticks(6).concat(maxValue)));
+    
+    xAxis.selectAll('text')
+      .style('fill', '#e0e0e0');
 
     const genderColor = genderConfig[selectedGender]?.color || '#6b7280';
 
@@ -315,11 +384,139 @@
       .style('font-size', '14px');
   }
 
-  function showTooltip(event, d, isBreakdown) {
+  function drawSelfMadeChart(svg, data) {
+    const x = d3.scaleBand()
+      .range([0, innerWidth])
+      .domain(data.map(d => d.label))
+      .padding(0.3);
+
+    svg.append('g')
+      .attr('transform', `translate(0,${innerHeight})`)
+      .call(d3.axisBottom(x))
+      .selectAll('text')
+        .style('fill', '#e0e0e0')
+        .style('font-size', '12px')
+        .style('text-anchor', 'middle');
+
+    const maxValue = d3.max(data, d => d.count) || 10;
+    const y = d3.scaleLinear()
+      .domain([0, maxValue])
+      .range([innerHeight, 0]);
+
+    const yAxis = svg.append('g')
+      .call(d3.axisLeft(y)
+        .tickFormat(d3.format('d'))
+        .ticks(Math.min(6, maxValue))
+        .tickValues(y.ticks(Math.min(6, maxValue)).concat(maxValue)));
+    
+    yAxis.selectAll('text')
+      .style('fill', '#e0e0e0');
+
+    const bars = svg.selectAll('.selfmade-bar')
+      .data(data)
+      .join('rect')
+      .attr('class', 'selfmade-bar')
+      .attr('x', d => x(d.label))
+      .attr('y', innerHeight)
+      .attr('width', x.bandwidth())
+      .attr('height', 0)
+      .attr('fill', d => selfMadeConfig[d.isSelfMade]?.color || '#6b7280')
+      .attr('stroke', 'rgba(255,255,255,0.3)')
+      .attr('stroke-width', 2)
+      .attr('rx', 6).attr('ry', 6)
+      .style('cursor', 'pointer');
+
+    bars.transition()
+      .duration(800)
+      .delay((d, i) => i * 200)
+      .attr('y', d => y(d.count))
+      .attr('height', d => innerHeight - y(d.count));
+
+    const labels = svg.selectAll('.selfmade-label')
+      .data(data)
+      .join('text')
+      .attr('class', 'selfmade-label')
+      .attr('x', d => x(d.label) + x.bandwidth() / 2)
+      .attr('y', innerHeight)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#fff')
+      .style('font-weight', 'bold')
+      .style('font-size', '14px')
+      .style('opacity', 0);
+
+    labels.transition()
+      .duration(800)
+      .delay((d, i) => i * 200 + 400)
+      .attr('y', d => y(d.count) - 10)
+      .style('opacity', 1)
+      .text(d => d.count.toLocaleString());
+
+    const total = d3.sum(data, d => d.count);
+    const percentLabels = svg.selectAll('.selfmade-percent-label')
+      .data(data)
+      .join('text')
+      .attr('class', 'selfmade-percent-label')
+      .attr('x', d => x(d.label) + x.bandwidth() / 2)
+      .attr('y', d => y(d.count) + 20)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#000')
+      .style('font-weight', 'bold')
+      .style('font-size', '12px')
+      .style('opacity', 0);
+
+    percentLabels.transition()
+      .duration(800)
+      .delay((d, i) => i * 200 + 600)
+      .style('opacity', 1)
+      .text(d => `${((d.count / total) * 100).toFixed(1)}%`);
+
+    bars
+      .on('mouseover', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('opacity', 0.8)
+          .attr('stroke-width', 3);
+        
+        showTooltip(event, d, false, true);
+      })
+      .on('mouseout', function() {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('opacity', 1)
+          .attr('stroke-width', 2);
+        
+        hideTooltip();
+      })
+      .on('mousemove', function(event) {
+        updateTooltipPosition(event);
+      });
+
+    svg.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -50)
+      .attr('x', -innerHeight / 2)
+      .text('Número de Bilionários')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
+  }
+
+  function showTooltip(event, d, isBreakdown, isSelfMade = false) {
     if (!tooltip) return;
     
     let content;
-    if (isBreakdown) {
+    if (isSelfMade) {
+      const total = d3.sum(breakdownData, item => item.count);
+      content = `
+        <div style="background: rgba(0,0,0,0.9); padding: 12px; border-radius: 8px; color: white; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid ${selfMadeConfig[d.isSelfMade]?.color};">
+          <div style="font-weight: bold; margin-bottom: 8px; color: ${selfMadeConfig[d.isSelfMade]?.color};">${genderConfig[selectedGender]?.icon} ${d.label}</div>
+          <div><strong>Quantidade:</strong> ${d.count.toLocaleString()}</div>
+          <div><strong>Porcentagem:</strong> ${((d.count / total) * 100).toFixed(1)}%</div>
+        </div>
+      `;
+    } else if (isBreakdown) {
       content = `
         <div style="background: rgba(0,0,0,0.9); padding: 12px; border-radius: 8px; color: white; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid ${genderConfig[selectedGender]?.color};">
           <div style="font-weight: bold; margin-bottom: 8px; color: ${genderConfig[selectedGender]?.color};">${d.country}</div>
@@ -332,7 +529,7 @@
           <div style="font-weight: bold; margin-bottom: 8px; color: ${d.config.color};">${d.config.icon} ${d.config.label}</div>
           <div><strong>Quantidade:</strong> ${d.count.toLocaleString()}</div>
           <div><strong>Porcentagem:</strong> ${d.percentage}%</div>
-          ${allData && allData.length > 0 ? '<div style="margin-top: 8px; font-size: 11px; color: #ccc;">Clique para ver por país</div>' : ''}
+          ${allData && allData.length > 0 ? '<div style="margin-top: 8px; font-size: 11px; color: #ccc;">Clique para ver detalhes</div>' : ''}
         </div>
       `;
     }
@@ -357,17 +554,85 @@
     showBreakdown = false;
     selectedGender = null;
     breakdownData = [];
-    drawChart();
+    breakdownType = 'country';
+    
+    // Limpar completamente o SVG e forçar recálculo total
+    if (svgElement) {
+      d3.select(svgElement).selectAll('*').remove();
+    }
+    
+    // Aguardar um pouco para o DOM se estabilizar e recalcular tudo
+    setTimeout(() => {
+      if (svgElement && svgElement.parentElement) {
+        // Forçar recálculo completo das dimensões
+        const parentWidth = svgElement.parentElement.clientWidth;
+        const parentHeight = svgElement.parentElement.clientHeight;
+        
+        width = parentWidth > 0 ? parentWidth : 550;
+        height = parentHeight > 0 ? parentHeight : 380;
+        
+        if (width < 300) width = 300; 
+        if (height < 250) height = 250;
+        
+        innerWidth = width - margin.left - margin.right;
+        innerHeight = height - margin.top - margin.bottom;
+        
+        // Redefinir atributos do SVG
+        d3.select(svgElement)
+          .attr('width', width)
+          .attr('height', height);
+        
+        // Redesenhar completamente
+        drawChart();
+      }
+    }, 150);
+  }
+
+  function showCountryBreakdown(gender) {
+    if (allData && allData.length > 0) {
+      selectedGender = gender;
+      breakdownData = getTopCountriesByGender(gender);
+      breakdownType = 'country';
+      showBreakdown = true;
+      setTimeout(() => {
+        updateDimensions();
+      }, 100);
+    }
+  }
+
+  function showSelfMadeBreakdown(gender) {
+    if (allData && allData.length > 0) {
+      selectedGender = gender;
+      breakdownData = getSelfMadeByGender(gender);
+      breakdownType = 'selfmade';
+      showBreakdown = true;
+      setTimeout(() => {
+        updateDimensions();
+      }, 100);
+    }
   }
   
   function updateDimensions() {
     if (svgElement && svgElement.parentElement) {
-      width = svgElement.parentElement.clientWidth > 0 ? svgElement.parentElement.clientWidth : 550;
-      height = svgElement.parentElement.clientHeight > 0 ? svgElement.parentElement.clientHeight : 380;
+      const parentWidth = svgElement.parentElement.clientWidth;
+      const parentHeight = svgElement.parentElement.clientHeight;
+      
+      width = parentWidth > 0 ? parentWidth : 550;
+      height = parentHeight > 0 ? parentHeight : 380;
+      
       if (width < 300) width = 300; 
       if (height < 250) height = 250;
+      
       innerWidth = width - margin.left - margin.right;
       innerHeight = height - margin.top - margin.bottom;
+      
+      // Garantir que o SVG tenha as dimensões corretas
+      if (svgElement) {
+        d3.select(svgElement)
+          .attr('width', width)
+          .attr('height', height);
+      }
+      
       drawChart();
     }
   }
@@ -379,7 +644,11 @@
       .style('pointer-events', 'none')
       .style('z-index', 1000);
     
-    updateDimensions();
+    // Aguardar o elemento estar pronto
+    setTimeout(() => {
+      updateDimensions();
+    }, 100);
+    
     window.addEventListener('resize', updateDimensions);
     return () => {
       window.removeEventListener('resize', updateDimensions);
@@ -388,8 +657,33 @@
   });
 
   afterUpdate(() => {
-    drawChart();
+    // Aguardar a atualização do DOM e verificar se precisamos redesenhar
+    setTimeout(() => {
+      if (svgElement) {
+        const currentWidth = svgElement.clientWidth || 0;
+        const currentHeight = svgElement.clientHeight || 0;
+        
+        // Se as dimensões mudaram ou se o SVG está vazio, redesenhar
+        if (currentWidth !== width || currentHeight !== height || !svgElement.hasChildNodes()) {
+          updateDimensions();
+        }
+      }
+    }, 50);
   });
+
+  // Reactive statement otimizado para dados principais
+  $: if (dataWithPercentage && dataWithPercentage.length > 0 && svgElement && !showBreakdown) {
+    setTimeout(() => {
+      updateDimensions();
+    }, 20);
+  }
+
+  // Reactive statement otimizado para breakdown
+  $: if (showBreakdown && breakdownData && breakdownData.length > 0 && svgElement) {
+    setTimeout(() => {
+      updateDimensions();
+    }, 20);
+  }
 </script>
 
 <div class="chart-wrapper">
@@ -419,6 +713,35 @@
         </div>
       {/each}
     </div>
+
+    {#if allData && allData.length > 0}
+      <div class="breakdown-controls">
+        <h4>Explorar por gênero:</h4>
+        <div class="control-buttons">
+          {#each dataWithPercentage as item}
+            <div class="gender-controls">
+              <span class="gender-label" style="color: {item.config.color}">
+                {item.config.icon} {item.config.label}
+              </span>
+              <div class="button-group">
+                <button 
+                  class="breakdown-button country-button" 
+                  on:click={() => showCountryBreakdown(item.gender)}
+                >
+                  Por País
+                </button>
+                <button 
+                  class="breakdown-button selfmade-button" 
+                  on:click={() => showSelfMadeBreakdown(item.gender)}
+                >
+                  Self-Made
+                </button>
+              </div>
+            </div>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -499,6 +822,71 @@
     font-weight: 600;
   }
 
+  .breakdown-controls {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .breakdown-controls h4 {
+    color: #e0e0e0;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 16px;
+  }
+
+  .control-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .gender-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .gender-label {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .breakdown-button {
+    background: rgba(78, 205, 196, 0.2);
+    border: 1px solid #4ecdc4;
+    color: #4ecdc4;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .breakdown-button:hover {
+    background: rgba(78, 205, 196, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .selfmade-button {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #10b981;
+  }
+
+  .selfmade-button:hover {
+    background: rgba(16, 185, 129, 0.3);
+  }
+
   @media (max-width: 768px) {
     .chart-wrapper {
       padding: 15px;
@@ -515,6 +903,24 @@
     
     .summary-item {
       justify-content: center;
+    }
+
+    .control-buttons {
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .gender-controls {
+      width: 100%;
+    }
+
+    .button-group {
+      justify-content: center;
+    }
+
+    .breakdown-button {
+      flex: 1;
+      max-width: 120px;
     }
   }
 </style> 

@@ -62,7 +62,7 @@
     "América do Norte": "#1f77b4",    
     "América do Sul": "#ff7f0e",      
     "Europa": "#2ca02c",              
-    "Ásia": "#d62728",               
+    "Ásia": "#9966cc",               
     "África": "#9467bd",              
     "Oceania": "#8c564b"             
   };
@@ -153,6 +153,7 @@
   function processData() {
     countryStats = {};
     
+    // Primeiro passo: contar residentes, nativos e imigrantes por país
     filteredData.forEach(person => {
       const birthCountry = person.countryOfCitizenship || 'Unknown';
       const residenceCountry = person.country || 'Unknown';
@@ -160,7 +161,8 @@
       if (residenceCountry !== 'Unknown') {
         if (!countryStats[residenceCountry]) {
           countryStats[residenceCountry] = { 
-            residents: 0, natives: 0, immigrants: 0, totalWealth: 0, avgAge: 0
+            residents: 0, natives: 0, immigrants: 0, emigrants: 0, 
+            totalWealth: 0, avgAge: 0, netMigration: 0
           };
         }
         
@@ -175,15 +177,40 @@
       }
     });
 
+    // Segundo passo: contar emigrantes (pessoas que nasceram em um país mas moram em outro)
+    filteredData.forEach(person => {
+      const birthCountry = person.countryOfCitizenship || 'Unknown';
+      const residenceCountry = person.country || 'Unknown';
+      
+      if (birthCountry !== 'Unknown' && residenceCountry !== 'Unknown' && birthCountry !== residenceCountry) {
+        // Inicializar estatísticas do país de nascimento se não existir
+        if (!countryStats[birthCountry]) {
+          countryStats[birthCountry] = { 
+            residents: 0, natives: 0, immigrants: 0, emigrants: 0, 
+            totalWealth: 0, avgAge: 0, netMigration: 0
+          };
+        }
+        countryStats[birthCountry].emigrants++;
+      }
+    });
+
+    // Terceiro passo: calcular migração líquida e outras estatísticas
     Object.keys(countryStats).forEach(country => {
+      const stats = countryStats[country];
+      
+      // Migração líquida = imigrantes - emigrantes
+      stats.netMigration = stats.immigrants - stats.emigrants;
+      
+      // Calcular idade média dos residentes
       const ages = filteredData
         .filter(p => p.country === country && p.age)
         .map(p => parseFloat(p.age));
       
-      countryStats[country].avgAge = ages.length > 0 ? 
+      stats.avgAge = ages.length > 0 ? 
         ages.reduce((sum, age) => sum + age, 0) / ages.length : 0;
     });
 
+    // Processar fluxos migratórios
     const flows = {};
     filteredData.forEach(person => {
       const birthCountry = person.countryOfCitizenship || 'Unknown';
@@ -341,7 +368,9 @@
           d3.select(this).transition().duration(200).attr("fill-opacity", 1).attr("stroke-width", 3);
         }
         const continent = countryToContinentMap[d.name] || "Não classificado";
-        const tooltipText = `${d.name} (${continent})\nTotal: ${d.stats.residents} bilionários\nNativos: ${d.stats.natives}\nImigrantes: ${d.stats.immigrants}\nRiqueza total: $${(d.stats.totalWealth).toFixed(1)}B\nIdade média: ${d.stats.avgAge.toFixed(1)} anos`;
+        const netMigrationText = d.stats.netMigration > 0 ? 
+          `+${d.stats.netMigration}` : `${d.stats.netMigration}`;
+        const tooltipText = `${d.name} (${continent})\nTotal: ${d.stats.residents} bilionários\nNativos: ${d.stats.natives}\nImigrantes: ${d.stats.immigrants}\nEmigrantes: ${d.stats.emigrants}\nMigração líquida: ${netMigrationText}\nRiqueza total: $${(d.stats.totalWealth).toFixed(1)}B\nIdade média: ${d.stats.avgAge.toFixed(1)} anos`;
         showTooltip(event, tooltipText);
       })
       .on("mouseout", function(event, d) {
@@ -514,6 +543,25 @@
               ({countryStats[selectedCountry].natives} nativos, {countryStats[selectedCountry].immigrants} imigrantes)
             </span>
           </div>
+          <div class="stat-item migration-details">
+            <span class="stat-label">Detalhes Migratórios:</span>
+            <span class="stat-value">
+              {countryStats[selectedCountry].emigrants} emigrantes
+            </span>
+          </div>
+          <div class="stat-item net-migration {countryStats[selectedCountry].netMigration >= 0 ? 'positive' : 'negative'}">
+            <span class="stat-label">Migração Líquida:</span>
+            <span class="stat-value net-migration-value">
+              {countryStats[selectedCountry].netMigration >= 0 ? '+' : ''}{countryStats[selectedCountry].netMigration}
+              {#if countryStats[selectedCountry].netMigration > 0}
+                <span class="migration-indicator">📈 Ganho</span>
+              {:else if countryStats[selectedCountry].netMigration < 0}
+                <span class="migration-indicator">📉 Perda</span>
+              {:else}
+                <span class="migration-indicator">⚖️ Neutro</span>
+              {/if}
+            </span>
+          </div>
         {/if}
       </div>
     </div>
@@ -619,6 +667,33 @@
   .stat-item.selected-country {
     border-color: #ff6b6b;
     background: rgba(255, 107, 107, 0.1);
+  }
+
+  .stat-item.migration-details {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+  }
+
+  .stat-item.net-migration.positive {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  .stat-item.net-migration.negative {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .migration-indicator {
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+
+  .net-migration-value {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .stat-label {

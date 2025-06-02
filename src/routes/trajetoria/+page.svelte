@@ -252,61 +252,6 @@
     </div>
   </section>
 
-  <section class="story-section side-by-side">
-    <div class="content-half left text-content">
-        <h2>Entendendo os Bilionários</h2>
-        <p>
-            Visando entender melhor quem são essas pessoas e como elas ficaram ricas, 
-            nós separamos os países mais relevantes para um análise macro da situação.
-            Conseguimos identificar alguns insights interessantes, como a alta concentração de bilionários
-            em países como Estados Unidos e China, além de um padrão claro na idade média dos bilionários.
-        </p>
-    </div>
-    <div class="content-half right chart-area-wrapper">
-      <div class="chart-section">
-        <div class="chart-container">
-          <div class="chart-header">
-            <button class="nav-arrow prev-arrow" on:click={prevView} disabled={isLoading}>←</button>
-            <div class="chart-title-container">
-              <h3 class="chart-title">{currentViewData.label}</h3>
-              <div class="view-indicator">{currentViewIndex + 1} de {views.length}</div>
-            </div>
-            <button class="nav-arrow next-arrow" on:click={nextView} disabled={isLoading}>→</button>
-          </div>
-          
-          {#if !isLoading && chartData.length > 0}
-            <div class="visualization-container">
-              {#if currentViewData.type === 'bar'}
-                <div class="bar-chart">
-                  {#each chartData as item, i}
-                    <div class="bar-item" on:mouseenter={() => hoveredItem = item} on:mouseleave={() => hoveredItem = null} style="animation-delay: {i * 0.1}s">
-                      <div class="bar-label">{item.label}</div>
-                      <div class="bar-container">
-                        <div class="bar" style="width: {
-                          currentView === 'gender' || currentView === 'selfmade' 
-                            ? (item.value / 100) * 100 
-                            : (item.value / (d3.max(chartData, d => d.value) || 1)) * 100
-                        }%; background: {currentViewData.color};"></div>
-                        <div class="bar-value">{item.displayValue}</div>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-              {/if}
-            </div>
-          {:else if isLoading}
-            <div class="loading-chart">
-              <div class="loading-spinner"></div>
-              <span>Carregando visualização...</span>
-            </div>
-          {:else}
-            <div class="no-data">Nenhum dado disponível</div>
-          {/if}
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Seção do Mapa de Migração de Bilionários -->
   <section class="story-section full-width map-section">
     <div class="map-text-content">

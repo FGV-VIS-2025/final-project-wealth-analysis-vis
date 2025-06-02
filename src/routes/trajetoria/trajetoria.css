@@ -113,7 +113,17 @@
 .nav-arrow:hover:not(:disabled) { background: #ffd700; color: #121212; border-color: #ffd700; }
 .nav-arrow:disabled { background: #2a2a2a; color: #666; cursor: not-allowed; border-color: #444; }
 
-.bar-chart { display: flex; flex-direction: column; gap: 18px; }
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
 
 .bar-item {
   position: relative;
@@ -687,4 +697,41 @@
         font-size: 1.0em;
         padding: 40px 15px;
     }
+}
+
+.x-axis {
+  margin-top: 20px;
+  position: relative;
+}
+
+.x-axis-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.x-axis-ticks {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+
+.x-tick {
+  color: #b0b0b0;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+  position: relative;
+}
+
+.x-tick::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.3);
 }

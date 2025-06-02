@@ -2,7 +2,6 @@
   import AgeHistogram from '$lib/components/AgeHistogram.svelte';
   import CountryBarChart from '$lib/components/CountryBarChart.svelte';
   import GenderChart from '$lib/components/GenderChart.svelte';
-  import SelfMadeBarChart from '$lib/components/SelfMadeBarChart.svelte';
   import { onMount } from 'svelte';
   import * as d3 from 'd3';
   import { base } from '$app/paths';
@@ -12,7 +11,6 @@
   let ageData = [];
   let countryData = [];
   let genderData = [];
-  let selfMadeData = [];
 
   // Função executada quando o componente é montado
   // Carrega os dados do CSV e inicializa as visualizações
@@ -42,13 +40,6 @@
     // Processa os dados por gênero
     genderData = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
                    .map(([key, value]) => ({ gender: key || 'Unknown', count: value }));
-
-    // Processa os dados de self-made
-    const selfMadeCounts = d3.rollups(allData.filter(d => d.selfMade !== undefined), v => v.length, d => d.selfMade);
-    selfMadeData = selfMadeCounts.map(([isSelfMade, count]) => ({
-      label: isSelfMade ? 'Self-Made' : 'Não Self-Made',
-      value: count
-    }));
 
     // Configuração do sistema de observação para o scroll-telling
     const sections = document.querySelectorAll('#scroll-telling-page .story-section');
@@ -143,7 +134,7 @@
     </div>
     <div class="chart-content right">
       {#if genderData.length > 0}
-        <GenderChart data={genderData} />
+        <GenderChart data={genderData} allData={allData} />
       {:else}
         <p class="loading-text">Carregando dados de gênero...</p>
       {/if}
@@ -186,34 +177,11 @@
       </p>
     </div>
     <div class="chart-content right">
-      {#if ageData.length > 0}
-        <AgeHistogram data={ageData} />
+      {#if allData.length > 0}
+        <AgeHistogram data={allData} />
       {:else}
         <p class="loading-text">Carregando dados de idade...</p>
       {/if}
-    </div>
-  </section>
-
-  <section class="story-section side-by-side">
-    <div class="chart-content left">
-      {#if selfMadeData.length > 0}
-        <SelfMadeBarChart data={selfMadeData} />
-      {:else}
-        <p class="loading-text">Carregando dados de origem da fortuna...</p>
-      {/if}
-    </div>
-    <div class="text-content right">
-      <h2>Fortuna Conquistada ou Herdada: A Origem do Poder Econômico</h2>
-      <p>
-        Esta análise desvenda uma questão fundamental: quantos bilionários construíram suas 
-        fortunas do zero versus aqueles que nasceram em berços de ouro? A distinção entre 
-        "self-made" e herdeiros revela dinâmicas sociais profundas.
-      </p>
-      <p>
-        Os números questionam narrativas sobre meritocracia e oportunidades iguais. 
-        Será que o "sonho do empreendedor" é realmente acessível a todos, ou existe 
-        um padrão hereditário na concentração de riqueza extrema?
-      </p>
     </div>
   </section>
 

@@ -46,9 +46,24 @@
 
   $: uniqueRegions = [...new Set(processedData.map(d => d.region))].sort();
 
+  // Reagir a mudanças nos dados ou filtros para redesenhar o gráfico
+  $: if (svgElement && sortedData.length > 0) {
+    drawChart();
+  }
+
+  // Também reagir a mudanças nas dimensões
+  $: if (svgElement && (width || height)) {
+    innerWidth = width - margin.left - margin.right;
+    innerHeight = height - margin.top - margin.bottom;
+    if (sortedData.length > 0) {
+      drawChart();
+    }
+  }
+
   function drawChart() {
     if (!svgElement || sortedData.length === 0) return;
 
+    // Limpar completamente o SVG antes de redesenhar
     d3.select(svgElement).selectAll('*').remove();
 
     const svg = d3.select(svgElement).attr('width', width).attr('height', height);
@@ -78,29 +93,79 @@
 
     const chartGroup = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const y = d3.scaleBand().range([0, innerHeight]).domain(sortedData.map(d => d.country)).padding(0.15);
-    const x = d3.scaleLinear().domain([0, d3.max(sortedData, d => d.count) || 10]).range([0, innerWidth]);
+    // Recalcular todas as escalas com base nos dados filtrados atuais
+    const y = d3.scaleBand()
+      .range([0, innerHeight])
+      .domain(sortedData.map(d => d.country))
+      .padding(0.15);
+    
+    const maxValue = d3.max(sortedData, d => d.count) || 10;
+    const x = d3.scaleLinear()
+      .domain([0, maxValue])
+      .range([0, innerWidth]);
 
-    chartGroup.append('g').call(d3.axisLeft(y)).selectAll('text')
-      .style('fill', '#e0e0e0').style('font-size', '12px');
+    // Criar eixo Y (países) com novo domínio
+    const yAxis = chartGroup.append('g')
+      .call(d3.axisLeft(y));
+    
+    yAxis.selectAll('text')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '12px');
 
-    chartGroup.append('g').attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format('d'))).selectAll('text').style('fill', '#e0e0e0');
+    // Gerar ticks mais proporcionais incluindo o valor máximo
+    const tickCount = Math.min(6, Math.floor(maxValue / 50) + 1);
+    const tickValues = x.ticks(tickCount);
+    
+    // Sempre incluir o valor máximo se não estiver muito próximo do último tick
+    if (!tickValues.includes(maxValue) && (maxValue - tickValues[tickValues.length - 1]) > maxValue * 0.1) {
+      tickValues.push(maxValue);
+    }
 
-    const bars = chartGroup.selectAll('rect').data(sortedData).join('rect')
-      .attr('y', d => y(d.country)).attr('x', 0).attr('height', y.bandwidth()).attr('width', 0)
+    // Criar eixo X (números) com novos ticks
+    const xAxis = chartGroup.append('g')
+      .attr('transform', `translate(0,${innerHeight})`)
+      .call(d3.axisBottom(x).tickFormat(d3.format('d')).tickValues(tickValues));
+    
+    xAxis.selectAll('text')
+      .style('fill', '#e0e0e0');
+
+    // Criar barras com posicionamento correto
+    const bars = chartGroup.selectAll('rect')
+      .data(sortedData)
+      .join('rect')
+      .attr('y', d => y(d.country))
+      .attr('x', 0)
+      .attr('height', y.bandwidth())
+      .attr('width', 0)
       .attr('fill', d => `url(#gradient-${d.region.replace(/\s+/g, '-')})`)
-      .attr('stroke', 'rgba(255,255,255,0.2)').attr('stroke-width', 0.5)
-      .attr('rx', 4).attr('ry', 4)  // Bordas arredondadas
+      .attr('stroke', 'rgba(255,255,255,0.2)')
+      .attr('stroke-width', 0.5)
+      .attr('rx', 4)
+      .attr('ry', 4)
       .style('cursor', 'pointer');
 
-    bars.transition().duration(800).delay((d, i) => i * 40).attr('width', d => x(d.count));
+    // Animar as barras
+    bars.transition()
+      .duration(800)
+      .delay((d, i) => i * 40)
+      .attr('width', d => x(d.count));
 
-    const labels = chartGroup.selectAll('.bar-label').data(sortedData).join('text')
-      .attr('class', 'bar-label').attr('x', 5).attr('y', d => y(d.country) + y.bandwidth() / 2).attr('dy', '0.35em')
-      .style('font-size', '11px').style('font-weight', 'bold').style('opacity', 0);
+    // Criar labels das barras
+    const labels = chartGroup.selectAll('.bar-label')
+      .data(sortedData)
+      .join('text')
+      .attr('class', 'bar-label')
+      .attr('x', 5)
+      .attr('y', d => y(d.country) + y.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .style('font-size', '11px')
+      .style('font-weight', 'bold')
+      .style('opacity', 0);
 
-    labels.transition().duration(800).delay((d, i) => i * 40 + 400).style('opacity', 1)
+    labels.transition()
+      .duration(800)
+      .delay((d, i) => i * 40 + 400)
+      .style('opacity', 1)
       .attr('x', d => {
         const barWidth = x(d.count);
         return barWidth < 60 ? barWidth + 8 : barWidth - 8;
@@ -109,6 +174,7 @@
       .style('fill', d => x(d.count) < 60 ? '#e0e0e0' : '#ffffff')
       .text(d => d.count.toLocaleString());
 
+    // Adicionar interações de hover
     bars.on('mouseover', function(event, d) {
         d3.select(this).transition().duration(200)
           .attr('opacity', 0.9)
@@ -125,10 +191,23 @@
       })
       .on('mousemove', function(event) { updateTooltipPosition(event); });
 
-    chartGroup.append('text').attr('text-anchor', 'middle').attr('x', innerWidth / 2).attr('y', innerHeight + 40)
-      .text('Número de Bilionários').style('fill', '#e0e0e0').style('font-size', '14px');
-    chartGroup.append('text').attr('text-anchor', 'middle').attr('transform', 'rotate(-90)')
-      .attr('y', -100).attr('x', -innerHeight / 2).text('Países').style('fill', '#e0e0e0').style('font-size', '14px');
+    // Adicionar labels dos eixos
+    chartGroup.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('x', innerWidth / 2)
+      .attr('y', innerHeight + 40)
+      .text('Número de Bilionários')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
+      
+    chartGroup.append('text')
+      .attr('text-anchor', 'middle')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -100)
+      .attr('x', -innerHeight / 2)
+      .text('Países')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
   }
 
   function showTooltip(event, d) {
@@ -176,8 +255,6 @@
       if (tooltip) tooltip.remove();
     };
   });
-
-  afterUpdate(() => { drawChart(); });
 </script>
 
 <div class="chart-wrapper">
