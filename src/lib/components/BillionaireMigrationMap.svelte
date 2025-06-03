@@ -62,7 +62,7 @@
     "América do Norte": "#1f77b4",    
     "América do Sul": "#ff7f0e",      
     "Europa": "#2ca02c",              
-    "Ásia": "#9966cc",               
+    "Ásia": "#FF007F",               
     "África": "#9467bd",              
     "Oceania": "#8c564b"             
   };

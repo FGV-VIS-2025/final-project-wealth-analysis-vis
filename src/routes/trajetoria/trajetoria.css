@@ -17,7 +17,7 @@
 }
 
 .total-section h2 {
-  color: #f5f5f5; 
+  color: #ffd700;
   margin-bottom: 20px;
   font-weight: 500;
   font-size: 1.1em;
@@ -282,7 +282,7 @@
 
 .text-content h2 {
     font-size: 1.8em; 
-    color: #f5f5f5;
+    color: #ffd700;
     margin-bottom: 20px;
 }
 
@@ -526,7 +526,7 @@
 }
 
 #trajetoria-page-container .map-text-content h2 {
-    color: #f5f5f5;
+    color: #ffd700;
     font-size: 1.8em;
     margin-bottom: 20px;
     font-weight: 600;
