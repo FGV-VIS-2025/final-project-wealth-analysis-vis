@@ -1,38 +1,38 @@
-# create-svelte
+# Billionaire Wealth Analysis Vis
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+## Integrantes
+- Gabriel Abad
+- Tomás Lira
+- Leonardo Alexandre
 
-## Creating a project
+## Resumo
+O projeto foi criado para atender à necessidade de ferramentas que não só apresentem dados sobre bilionários, mas que também permitam a exploração interativa e visual dessas informações. Seu principal objetivo é disponibilizar uma plataforma online que consolide e exiba dados do universo dos bilionários, possibilitando análises sobre como eles se distribuem por gênero, idade, país e residência, além de investigar seus fluxos migratórios e a conexão entre a concentração de bilionários e indicadores macroeconômicos.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Aritgo
+link: (colocar o link quando o relatorio estiver pronto)
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Vídeo
+link: https://youtu.be/0IoVozYs-fc (colocar o link quando o vídeo estiver pronto, por enquanto vai o vídeo que já fizemos)
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+## Instruções
+Basicamente, foi implementado um scrolltelling. Então para explorar todas as visualizações siga o caminho natural de scrolar para baixo que você passará para próxima visualização/insight.
 
-## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Divisão de Tarefas
 
-```bash
-npm run dev
+### Gabriel
+- Configurações do github pages, para podermos usar o csv.
+- Deploy automático pro github pages ao dar push.
+- Estrutura inicial da primeira página(com gráficos estáticos), modularizando o projeto para facilitar o desenvolvimento.
+- Scrolltelling, adicionei a lógica que implementa o efeito de passar para uma próxima vis.
+- Efeito de transição entre páginas.
+- Botões para mudar de página.
+- Ferramenta de busca de bilionários.
+- Refatorei a página inicial e a página de trajetoria para melhor leitura do código. Dividindo melhor o que cada módulo faz.
+- Idealizei e implementei o tema de cores do trabalho (modificando em relação a v1 do trabalho por completo).
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+### Tomás
+- 
 
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+### Leonardo
+- 
