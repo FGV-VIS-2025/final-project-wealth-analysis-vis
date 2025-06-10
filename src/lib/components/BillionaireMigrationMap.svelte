@@ -3,778 +3,1165 @@
   import * as d3 from 'd3';
 
   export let data = [];
+	export let selectedIndustries = [];
+	export let selectedGender = 'Todos';
+  
+  // Filtros locais
+  let filterIndustry = 'all';
   
   let svgElement;
-  let tooltip;
+	let worldData = null;
+	let filteredData = [];
+	let migrationFlows = [];
   let selectedCountry = null;
-  let selectedIndustry = 'Todos';
-  let selectedGender = 'Todos';
-  let showStatisticsPanel = false;
-  
-  const width = 900;
-  const height = 450;
-  
-  // Mapeamento de países para continentes
-  const countryToContinentMap = {
-    "United States": "América do Norte",
-    "Canada": "América do Norte",
-    "Mexico": "América do Norte",
-    
-    "Brazil": "América do Sul",
-    "Chile": "América do Sul",
-    
-    "China": "Ásia",
-    "India": "Ásia",
-    "Japan": "Ásia",
-    "South Korea": "Ásia",
-    "Hong Kong": "Ásia",
-    "Singapore": "Ásia",
-    "Thailand": "Ásia",
-    "Indonesia": "Ásia",
-    "Malaysia": "Ásia",
-    "United Arab Emirates": "Ásia",
-    "Israel": "Ásia",
-    "Uzbekistan": "Ásia",
-    "Cyprus": "Ásia",
-    
-    "Germany": "Europa",
-    "United Kingdom": "Europa",
-    "France": "Europa",
-    "Italy": "Europa",
-    "Spain": "Europa",
-    "Switzerland": "Europa",
-    "Netherlands": "Europa",
-    "Sweden": "Europa",
-    "Belgium": "Europa",
-    "Norway": "Europa",
-    "Czech Republic": "Europa",
-    "Austria": "Europa",
-    "Russia": "Europa",
-    "Monaco": "Europa",
-    
-    "Australia": "Oceania",
-    
-    "Nigeria": "África",
-    "South Africa": "África"
-  };
-  
+	let tooltip = { show: false, x: 0, y: 0, content: '' };
+	let countryCoordinates = new Map();
+	
+	// Controles para filtrar fluxos
+	let showEmigration = true;
+	let showImmigration = true;
+
+	// Mapeamento de nomes de países (dados → GeoJSON)
+	const countryNameMap = {
+		'United States': 'United States of America',
+		'United Kingdom': 'United Kingdom',
+		'South Korea': 'South Korea',
+		'Hong Kong': 'Hong Kong S.A.R.',
+		'Russia': 'Russia',
+		'China': 'China',
+		'Germany': 'Germany',
+		'India': 'India',
+		'Brazil': 'Brazil',  
+		'Canada': 'Canada',
+		'France': 'France',
+		'Switzerland': 'Switzerland',
+		'Italy': 'Italy',
+		'Japan': 'Japan',
+		'Australia': 'Australia',
+		'Singapore': 'Singapore',
+		'Israel': 'Israel',
+		'Turkey': 'Turkey',
+		'Taiwan': 'Taiwan',
+		'Thailand': 'Thailand',
+		'Netherlands': 'Netherlands',
+		'Sweden': 'Sweden',
+		'Belgium': 'Belgium',
+		'Norway': 'Norway',
+		'Spain': 'Spain',
+		'Mexico': 'Mexico',
+		'Indonesia': 'Indonesia',
+		'Philippines': 'Philippines',
+		'Ireland': 'Ireland',
+		'Finland': 'Finland',
+		'Denmark': 'Denmark',
+		'Austria': 'Austria',
+		'Chile': 'Chile',
+		'Czech Republic': 'Czech Republic',
+		'New Zealand': 'New Zealand',
+		'Poland': 'Poland',
+		'Ukraine': 'Ukraine',
+		'Colombia': 'Colombia',
+		'Argentina': 'Argentina',
+		'Portugal': 'Portugal',
+		'Greece': 'Greece',
+		'South Africa': 'South Africa',
+		'Egypt': 'Egypt',
+		'Nigeria': 'Nigeria',
+		'Morocco': 'Morocco',
+		'United Arab Emirates': 'United Arab Emirates',
+		'Saudi Arabia': 'Saudi Arabia',
+		'Kuwait': 'Kuwait',
+		'Qatar': 'Qatar',
+		'Oman': 'Oman',
+		'Lebanon': 'Lebanon',
+		'Cyprus': 'Cyprus',
+		'Malta': 'Malta',
+		'Iceland': 'Iceland',
+		'Luxembourg': 'Luxembourg',
+		'Liechtenstein': 'Liechtenstein',
+		'Monaco': 'Monaco',
+		'Kazakhstan': 'Kazakhstan',
+		'Uzbekistan': 'Uzbekistan',
+		'Georgia': 'Georgia',
+		'Armenia': 'Armenia',
+		'Estonia': 'Estonia',
+		'Latvia': 'Latvia',
+		'Lithuania': 'Lithuania',
+		'Slovakia': 'Slovakia',
+		'Slovenia': 'Slovenia',
+		'Croatia': 'Croatia',
+		'Hungary': 'Hungary',
+		'Romania': 'Romania',
+		'Bulgaria': 'Bulgaria',
+		'Serbia': 'Serbia',
+		'Montenegro': 'Montenegro',
+		'North Macedonia': 'North Macedonia',
+		'Albania': 'Albania',
+		'Bosnia and Herzegovina': 'Bosnia and Herzegovina',
+		'Moldova': 'Moldova',
+		'Belarus': 'Belarus',
+		'Vietnam': 'Vietnam',
+		'Myanmar': 'Myanmar',
+		'Cambodia': 'Cambodia',
+		'Laos': 'Laos',
+		'Mongolia': 'Mongolia',
+		'Nepal': 'Nepal',
+		'Bangladesh': 'Bangladesh',
+		'Sri Lanka': 'Sri Lanka',
+		'Maldives': 'Maldives',
+		'Bhutan': 'Bhutan',
+		'Pakistan': 'Pakistan',
+		'Afghanistan': 'Afghanistan',
+		'Iran': 'Iran',
+		'Iraq': 'Iraq',
+		'Jordan': 'Jordan',
+		'Syria': 'Syria',
+		'Yemen': 'Yemen',
+		'Bahrain': 'Bahrain',
+		'Algeria': 'Algeria',
+		'Tunisia': 'Tunisia',
+		'Libya': 'Libya',
+		'Sudan': 'Sudan',
+		'Ethiopia': 'Ethiopia',
+		'Kenya': 'Kenya',
+		'Tanzania': 'Tanzania',
+		'Uganda': 'Uganda',
+		'Rwanda': 'Rwanda',
+		'Burundi': 'Burundi',
+		'Madagascar': 'Madagascar',
+		'Mauritius': 'Mauritius',
+		'Seychelles': 'Seychelles',
+		'Comoros': 'Comoros',
+		'Djibouti': 'Djibouti',
+		'Eritrea': 'Eritrea',
+		'Somalia': 'Somalia',
+		'Ghana': 'Ghana',
+		'Ivory Coast': "Côte d'Ivoire",
+		'Senegal': 'Senegal',
+		'Mali': 'Mali',
+		'Burkina Faso': 'Burkina Faso',
+		'Niger': 'Niger',
+		'Chad': 'Chad',
+		'Central African Republic': 'Central African Republic',
+		'Cameroon': 'Cameroon',
+		'Equatorial Guinea': 'Equatorial Guinea',
+		'Gabon': 'Gabon',
+		'Republic of the Congo': 'Republic of the Congo',
+		'Democratic Republic of the Congo': 'Democratic Republic of the Congo',
+		'Angola': 'Angola',
+		'Zambia': 'Zambia',
+		'Zimbabwe': 'Zimbabwe',
+		'Botswana': 'Botswana',
+		'Namibia': 'Namibia',
+		'Lesotho': 'Lesotho',
+		'Swaziland': 'Eswatini',
+		'Malawi': 'Malawi',
+		'Mozambique': 'Mozambique',
+		'Venezuela': 'Venezuela',
+		'Guyana': 'Guyana',
+		'Suriname': 'Suriname',
+		'Uruguay': 'Uruguay',
+		'Paraguay': 'Paraguay',
+		'Bolivia': 'Bolivia',
+		'Peru': 'Peru',
+		'Ecuador': 'Ecuador',
+		'Panama': 'Panama',
+		'Costa Rica': 'Costa Rica',
+		'Nicaragua': 'Nicaragua',
+		'Honduras': 'Honduras',
+		'El Salvador': 'El Salvador',
+		'Guatemala': 'Guatemala',
+		'Belize': 'Belize',
+		'Jamaica': 'Jamaica',
+		'Haiti': 'Haiti',
+		'Dominican Republic': 'Dominican Republic',
+		'Cuba': 'Cuba',
+		'Bahamas': 'Bahamas',
+		'Barbados': 'Barbados',
+		'Trinidad and Tobago': 'Trinidad and Tobago',
+		'Grenada': 'Grenada',
+		'Saint Vincent and the Grenadines': 'Saint Vincent and the Grenadines',
+		'Saint Lucia': 'Saint Lucia',
+		'Dominica': 'Dominica',
+		'Antigua and Barbuda': 'Antigua and Barbuda',
+		'Saint Kitts and Nevis': 'Saint Kitts and Nevis'
+	};
+
+	// Cores por continente harmonizadas com o radar chart
   const continentColors = {
-    "América do Norte": "#1f77b4",    
-    "América do Sul": "#ff7f0e",      
-    "Europa": "#2ca02c",              
-    "Ásia": "#FF007F",               
-    "África": "#9467bd",              
-    "Oceania": "#8c564b"             
-  };
-  
-  const worldCountries = [
-    {name: "United States", center: [-95.7129, 37.0902]},
-    {name: "China", center: [104.1954, 35.8617]},
-    {name: "United Kingdom", center: [-3.4360, 55.3781]},
-    {name: "Germany", center: [10.4515, 51.1657]},
-    {name: "France", center: [2.2137, 46.2276]},
-    {name: "India", center: [78.9629, 20.5937]},
-    {name: "Japan", center: [138.2529, 36.2048]},
-    {name: "Russia", center: [105.3188, 61.5240]},
-    {name: "Brazil", center: [-51.9253, -14.2350]},
-    {name: "Canada", center: [-106.3468, 56.1304]},
-    {name: "Australia", center: [133.7751, -25.2744]},
-    {name: "Mexico", center: [-102.5528, 23.6345]},
-    {name: "Spain", center: [-3.7492, 40.4637]},
-    {name: "Italy", center: [12.5674, 41.8719]},
-    {name: "Switzerland", center: [8.2275, 46.8182]},
-    {name: "South Korea", center: [127.7669, 35.9078]},
-    {name: "Netherlands", center: [5.2913, 52.1326]},
-    {name: "Sweden", center: [18.6435, 60.1282]},
-    {name: "Hong Kong", center: [114.1694, 22.3193]},
-    {name: "Singapore", center: [103.8198, 1.3521]},
-    {name: "Belgium", center: [4.4699, 50.5039]},
-    {name: "Israel", center: [34.8516, 31.0461]},
-    {name: "Norway", center: [8.4689, 60.4720]},
-    {name: "Thailand", center: [100.9925, 15.8700]},
-    {name: "Indonesia", center: [113.9213, -0.7893]},
-    {name: "South Africa", center: [22.9375, -30.5595]},
-    {name: "Chile", center: [-71.5430, -35.6751]},
-    {name: "Czech Republic", center: [15.4730, 49.8175]}
-  ];
+		'North America': '#45b7d1',    // Azul claro (do radar)
+		'South America': '#f39c12',    // Laranja dourado (do radar)
+		'Europe': '#2ecc71',           // Verde (do radar)
+		'Asia': '#e74c3c',            // Vermelho (do radar)
+		'Africa': '#9b59b6',          // Roxo (do radar)
+		'Oceania': '#d35400',         // Laranja escuro
+		'Middle East': '#4ecdc4'      // Turquesa (do radar)
+	};
 
-  let filteredData = [];
-  let migrationData = [];
-  let countryStats = {};
-  let industries = [];
-  let genders = [];
-  let simulation;
+	// Extrair indústrias dos dados
+	$: uniqueIndustries = data && data.length > 0 
+		? ['all', ...new Set(data.map(d => d.industries).filter(Boolean)).values()].sort()
+		: ['all'];
 
-  onMount(() => {
-    if (data.length > 0) {
-      extractFilters();
-      updateFilteredData();
-    }
-  });
+	// Carregar dados do mundo
+	onMount(async () => {
+		try {
+			const response = await fetch('/countries.geojson');
+			worldData = await response.json();
+		} catch (error) {
+			console.error('Erro ao carregar dados do mundo:', error);
+		}
+	});
 
-  function extractFilters() {
-    const industriesSet = new Set();
-    const gendersSet = new Set();
-    
-    data.forEach(person => {
-      if (person.industries) industriesSet.add(person.industries);
-      if (person.gender) gendersSet.add(person.gender);
-    });
-    
-    industries = ['Todos', ...Array.from(industriesSet).sort()];
-    genders = ['Todos', ...Array.from(gendersSet).sort()];
-  }
+	// Filtrar dados
+	$: {
+		if (data && data.length > 0) {
+			filteredData = data.filter(d => {
+				// Filtro local por indústria
+				const localIndustryMatch = filterIndustry === 'all' || d.industries === filterIndustry;
+				// Se selectedIndustries está vazio, incluir todos
+				const industryMatch = !selectedIndustries || selectedIndustries.length === 0 || 
+					selectedIndustries.includes(d.industries);
+				// Se selectedGender não está definido ou é 'Todos', incluir todos
+				const genderMatch = !selectedGender || selectedGender === 'Todos' || 
+					d.gender === selectedGender;
+				return localIndustryMatch && industryMatch && genderMatch && d.country && 
+					d.country !== 'Unknown' && d.country.trim() !== '';
+			});
+		} else {
+			filteredData = [];
+		}
+		
 
-  function updateFilteredData() {
-    if (!data || data.length === 0) return;
-    
-    filteredData = data.filter(person => {
-      let industryMatch = false;
-      if (selectedIndustry === 'Todos') {
-        industryMatch = true;
-      } else if (person.industries) {
-        industryMatch = person.industries.toString().trim() === selectedIndustry.toString().trim();
+	}
+
+	// Calcular migração (cidadania → residência)
+	// LÓGICA:
+	// - countryOfCitizenship = país de nascimento/cidadania (ORIGEM)
+	// - country = país atual de residência (DESTINO)
+	// - Se diferentes = houve migração de origem → destino
+	$: {
+		if (filteredData && filteredData.length > 0) {
+			const migrationCounts = new Map();
+			
+			filteredData.forEach(d => {
+				if (d.countryOfCitizenship && d.country && 
+					d.countryOfCitizenship !== d.country && 
+					d.country !== 'Unknown' && d.countryOfCitizenship !== 'Unknown') {
+					
+					const key = `${d.countryOfCitizenship}-${d.country}`;
+					migrationCounts.set(key, (migrationCounts.get(key) || 0) + 1);
+				}
+			});
+
+			migrationFlows = Array.from(migrationCounts.entries())
+				.filter(([, count]) => count >= 1)
+				.map(([key, count]) => {
+					const [origin, destination] = key.split('-');
+					return { 
+						origin,          // País de cidadania (saiu daqui)
+						destination,     // País atual (chegou aqui)
+						count 
+					};
+				})
+				.sort((a, b) => b.count - a.count); // Ordenar por volume
+		} else {
+			migrationFlows = [];
+		}
+	}
+
+	// Limpar seleção quando filtros mudarem
+	$: {
+		if (filterIndustry || selectedIndustries || selectedGender) {
+			selectedCountry = null; // Reset quando filtros mudarem
+		}
+	}
+
+	// Renderizar mapa
+	$: {
+		if (svgElement && worldData && filteredData.length > 0) {
+			renderMap();
+		}
+	}
+
+	// Limpar fluxos quando filtros mudarem
+	$: {
+		if (svgElement && (filterIndustry || selectedIndustries || selectedGender)) {
+			renderFlows(); // Vai limpar automaticamente se selectedCountry for null
+		}
+	}
+
+	function normalizeCountryName(name) {
+		return countryNameMap[name] || name;
+	}
+
+	function isCountryMatch(geoName, dataCountry) {
+		// Normalizar nomes
+		const normalizedGeoName = geoName.toLowerCase().trim();
+		const normalizedDataCountry = dataCountry.toLowerCase().trim();
+		const mappedDataCountry = normalizeCountryName(dataCountry).toLowerCase().trim();
+		
+		// Correspondências exatas
+		if (normalizedGeoName === normalizedDataCountry || 
+			normalizedGeoName === mappedDataCountry) {
+			return true;
+		}
+		
+		// Correspondências especiais
+		const specialMatches = {
+			'united states of america': ['united states', 'usa', 'us'],
+			'united kingdom': ['uk', 'britain', 'great britain'],
+			'south korea': ['korea', 'republic of korea'],
+			'hong kong s.a.r.': ['hong kong'],
+			'russia': ['russian federation'],
+			'china': ['people\'s republic of china'],
+			'taiwan': ['republic of china'],
+			'iran': ['islamic republic of iran'],
+			'syria': ['syrian arab republic'],
+			'vietnam': ['viet nam'],
+			'laos': ['lao people\'s democratic republic'],
+			'north korea': ['democratic people\'s republic of korea'],
+			'macedonia': ['north macedonia'],
+			'czech republic': ['czechia'],
+			'ivory coast': ['côte d\'ivoire'],
+			'swaziland': ['eswatini'],
+			'myanmar': ['burma'],
+			'democratic republic of the congo': ['congo', 'dr congo', 'zaire'],
+			'republic of the congo': ['congo-brazzaville']
+		};
+		
+		// Verificar correspondências especiais
+		for (let [standard, alternatives] of Object.entries(specialMatches)) {
+			if (normalizedGeoName === standard && 
+				alternatives.some(alt => normalizedDataCountry.includes(alt) || alt.includes(normalizedDataCountry))) {
+				return true;
+			}
+			if (alternatives.includes(normalizedGeoName) && 
+				(normalizedDataCountry.includes(standard) || standard.includes(normalizedDataCountry))) {
+				return true;
+			}
+		}
+		
+		// Correspondências parciais (com mais de 3 caracteres)
+		if (normalizedDataCountry.length > 3 && normalizedGeoName.length > 3) {
+			if (normalizedGeoName.includes(normalizedDataCountry) || 
+				normalizedDataCountry.includes(normalizedGeoName)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	function renderMap() {
+		const svg = d3.select(svgElement);
+		svg.selectAll('*').remove();
+
+		// Dimensões otimizadas para tela 918x857
+		const width = 750; // Reduzido para caber melhor
+		const height = 400; // Mantém proporção adequada
+
+		// Projeção do mapa
+		const projection = d3.geoNaturalEarth1()
+			.scale(115) // Ajustado proporcionalmente
+			.translate([width / 2, height / 2]);
+
+		const path = d3.geoPath().projection(projection);
+
+		// Contar bilionários por país de residência atual (não de cidadania)
+		// IMPORTANTE: country = onde moram ATUALMENTE, countryOfCitizenship = origem
+		const countryCounts = new Map();
+		countryCoordinates.clear();
+		
+		filteredData.forEach(d => {
+			const country = d.country; // País atual de residência
+			if (country && country !== 'Unknown') {
+				countryCounts.set(country, (countryCounts.get(country) || 0) + 1);
+				
+				// Armazenar coordenadas se disponíveis
+				if (d.latitude_country && d.longitude_country) {
+					countryCoordinates.set(country, {
+						lat: +d.latitude_country,
+						lng: +d.longitude_country
+					});
+        }
       }
-      
-      let genderMatch = false;
-      if (selectedGender === 'Todos') {
-        genderMatch = true;
-      } else if (person.gender) {
-        genderMatch = person.gender.toString().trim() === selectedGender.toString().trim();
-      }
-      
-      return industryMatch && genderMatch;
-    });
-    
-    processData();
-    createVisualization();
-  }
-
-  function processData() {
-    countryStats = {};
-    
-    // Primeiro passo: contar residentes, nativos e imigrantes por país
-    filteredData.forEach(person => {
-      const birthCountry = person.countryOfCitizenship || 'Unknown';
-      const residenceCountry = person.country || 'Unknown';
-      
-      if (residenceCountry !== 'Unknown') {
-        if (!countryStats[residenceCountry]) {
-          countryStats[residenceCountry] = { 
-            residents: 0, natives: 0, immigrants: 0, emigrants: 0, 
-            totalWealth: 0, avgAge: 0, netMigration: 0
-          };
-        }
-        
-        countryStats[residenceCountry].residents++;
-        countryStats[residenceCountry].totalWealth += parseFloat(person.finalWorth || 0);
-        
-        if (birthCountry !== residenceCountry && birthCountry !== 'Unknown') {
-          countryStats[residenceCountry].immigrants++;
-        } else if (birthCountry === residenceCountry) {
-          countryStats[residenceCountry].natives++;
-        }
-      }
     });
 
-    // Segundo passo: contar emigrantes (pessoas que nasceram em um país mas moram em outro)
-    filteredData.forEach(person => {
-      const birthCountry = person.countryOfCitizenship || 'Unknown';
-      const residenceCountry = person.country || 'Unknown';
-      
-      if (birthCountry !== 'Unknown' && residenceCountry !== 'Unknown' && birthCountry !== residenceCountry) {
-        // Inicializar estatísticas do país de nascimento se não existir
-        if (!countryStats[birthCountry]) {
-          countryStats[birthCountry] = { 
-            residents: 0, natives: 0, immigrants: 0, emigrants: 0, 
-            totalWealth: 0, avgAge: 0, netMigration: 0
-          };
-        }
-        countryStats[birthCountry].emigrants++;
-      }
-    });
 
-    // Terceiro passo: calcular migração líquida e outras estatísticas
-    Object.keys(countryStats).forEach(country => {
-      const stats = countryStats[country];
-      
-      // Migração líquida = imigrantes - emigrantes
-      stats.netMigration = stats.immigrants - stats.emigrants;
-      
-      // Calcular idade média dos residentes
-      const ages = filteredData
-        .filter(p => p.country === country && p.age)
-        .map(p => parseFloat(p.age));
-      
-      stats.avgAge = ages.length > 0 ? 
-        ages.reduce((sum, age) => sum + age, 0) / ages.length : 0;
-    });
 
-    // Processar fluxos migratórios
-    const flows = {};
-    filteredData.forEach(person => {
-      const birthCountry = person.countryOfCitizenship || 'Unknown';
-      const residenceCountry = person.country || 'Unknown';
-      
-      if (birthCountry !== residenceCountry && birthCountry !== 'Unknown' && residenceCountry !== 'Unknown') {
-        const flowKey = `${birthCountry}->${residenceCountry}`;
-        flows[flowKey] = (flows[flowKey] || 0) + 1;
-      }
-    });
 
-    migrationData = Object.entries(flows)
-      .map(([flow, count]) => {
-        const [source, target] = flow.split('->');
-        return { source, target, count };
-      })
-      .filter(d => d.count >= 1)
-      .sort((a, b) => b.count - a.count);
-  }
 
-  function getCountryColor(countryName) {
-    const continent = countryToContinentMap[countryName];
-    return continent ? continentColors[continent] : "#ffd700"; 
-  }
+		// Grupo principal
+		const g = svg.append('g');
 
-  function createVisualization() {
-    const svg = d3.select(svgElement);
-    svg.selectAll("*").remove();
+		// Fundo do oceano harmonizado
+		g.append('rect')
+			.attr('width', width)
+			.attr('height', height)
+			.attr('fill', '#1a1a2e')
+			.attr('stroke', 'none');
 
-    if (Object.keys(countryStats).length === 0) {
-      svg.append("text")
-        .attr("x", width / 2)
-        .attr("y", height / 2)
-        .attr("text-anchor", "middle")
-        .attr("fill", "#e0e0e0")
-        .attr("font-size", "18px")
-        .text("Nenhum dado encontrado para os filtros selecionados");
-      return;
-    }
+		// Renderizar países
+		g.selectAll('.country')
+			.data(worldData.features)
+			.enter()
+			.append('path')
+			.attr('class', 'country')
+			.attr('d', path)
+			.attr('fill', d => {
+				const geoName = d.properties.NAME || d.properties.name;
+				
+				// Encontrar correspondência nos dados
+				let billionaireCount = 0;
+				let continent = null;
+				
+				for (let [dataCountry, count] of countryCounts.entries()) {
+					const normalizedDataCountry = normalizeCountryName(dataCountry);
+					if (isCountryMatch(geoName, dataCountry)) {
+						billionaireCount = count;
+						// Determinar continente baseado na localização
+						const centroid = d3.geoCentroid(d);
+						continent = getContinentFromCoordinates(centroid);
+						break;
+					}
+				}
+				
+				if (billionaireCount === 0) return '#34495e';
+				
+				const baseColor = continentColors[continent] || '#666666';
+				
+				// Intensidade baseada no número de bilionários
+				const intensity = Math.min(billionaireCount / 10, 1);
+				return d3.color(baseColor).brighter(0.3 - intensity * 0.3);
+			})
+			.attr('stroke', '#2c3e50')
+			.attr('stroke-width', 0.8)
+			.style('cursor', 'pointer')
+			.on('click', function(event, d) {
+				const geoName = d.properties.NAME || d.properties.name;
+				
+				// Encontrar país correspondente nos dados
+				let matchedCountry = null;
+				for (let dataCountry of countryCounts.keys()) {
+					const normalizedDataCountry = normalizeCountryName(dataCountry);
+					if (isCountryMatch(geoName, dataCountry)) {
+						matchedCountry = dataCountry;
+						break;
+					}
+				}
+				
+				if (matchedCountry && countryCounts.get(matchedCountry) > 0) {
+					// Toggle: se é o mesmo país, desmarca e limpa fluxos
+					if (selectedCountry === matchedCountry) {
+						selectedCountry = null;
+					} else {
+						selectedCountry = matchedCountry;
+					}
+					// Sempre renderizar fluxos (incluindo limpeza quando selectedCountry é null)
+					renderFlows();
+				}
+			})
+			.on('mouseover', function(event, d) {
+				const geoName = d.properties.NAME || d.properties.name;
+				
+				// Encontrar correspondência nos dados
+				let billionaireCount = 0;
+				for (let [dataCountry, count] of countryCounts.entries()) {
+					const normalizedDataCountry = normalizeCountryName(dataCountry);
+					if (isCountryMatch(geoName, dataCountry)) {
+						billionaireCount = count;
+						break;
+					}
+				}
+				
+				// Highlight do país
+				d3.select(this)
+					.attr('stroke', '#ffd700')
+					.attr('stroke-width', 2);
 
-    const projection = d3.geoNaturalEarth1()
-      .scale(150)
-      .translate([width / 2, height / 2]);
+				// Tooltip mais clean
+				if (billionaireCount > 0) {
+					tooltip = {
+						show: true,
+						x: event.offsetX + 10,
+						y: event.offsetY - 10,
+						content: `${geoName}<br/><span style="color: #ffd700; font-weight: bold;">${billionaireCount}</span> bilionários`
+					};
+				}
+			})
+			.on('mouseout', function() {
+				const geoName = d.properties.NAME || d.properties.name;
+				let matchedCountry = null;
+				for (let dataCountry of countryCounts.keys()) {
+					const normalizedDataCountry = normalizeCountryName(dataCountry);
+					if (isCountryMatch(geoName, dataCountry)) {
+						matchedCountry = dataCountry;
+						break;
+					}
+				}
+				
+				// Só resetar estilo se não for o país selecionado
+				if (selectedCountry !== matchedCountry) {
+					d3.select(this)
+						.attr('stroke', '#2c3e50')
+						.attr('stroke-width', 0.8);
+				} else {
+					// Manter highlight do país selecionado
+					d3.select(this)
+						.attr('stroke', '#ffd700')
+						.attr('stroke-width', 2);
+				}
+				// Garantir que o tooltip desapareça sempre
+				tooltip = { show: false, x: 0, y: 0, content: '' };
+			});
 
-    const countryData = worldCountries
-      .filter(country => countryStats[country.name])
-      .map(country => ({
-        ...country,
-        stats: countryStats[country.name],
-        projected: projection(country.center)
-      }))
-      .filter(d => d.projected);
+		// Renderizar fluxos se houver país selecionado
+		renderFlows();
 
-    const maxResidents = Math.max(...Object.values(countryStats).map(d => d.residents));
-    const circleScale = d3.scaleSqrt().domain([0, maxResidents]).range([8, 45]);
+		// Atualizar highlight visual dos países
+		updateCountryHighlights(g, countryCounts);
+	}
 
-    const nodes = countryData.map(d => ({
-      ...d,
-      x: d.projected[0],
-      y: d.projected[1],
-      r: circleScale(d.stats.residents)
-    }));
+	function updateCountryHighlights(g, countryCounts) {
+		// Resetar todos os países para o estilo padrão
+		g.selectAll('.country')
+			.attr('stroke', '#2c3e50')
+			.attr('stroke-width', 0.8);
 
-    svg.append("rect")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("fill", "#1a1a1a")
-      .attr("stroke", "#333");
+		// Highlight do país selecionado, se houver
+		if (selectedCountry) {
+			g.selectAll('.country')
+				.filter(function(d) {
+					const geoName = d.properties.NAME || d.properties.name;
+					for (let dataCountry of countryCounts.keys()) {
+						if (isCountryMatch(geoName, dataCountry) && dataCountry === selectedCountry) {
+							return true;
+						}
+					}
+					return false;
+				})
+				.attr('stroke', '#ffd700')
+				.attr('stroke-width', 2);
+		}
+	}
 
-    const defs = svg.append("defs");
-    
-    defs.append("marker")
-      .attr("id", "arrowhead")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 8)
-      .attr("refY", 0)
-      .attr("markerWidth", 4)
-      .attr("markerHeight", 4)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#ffd700");
+	function getContinentFromCoordinates([lng, lat]) {
+		// Determinar continente baseado em coordenadas aproximadas mais precisas
+		if (lng >= -170 && lng <= -30) {
+			if (lat >= 15) return 'North America';
+			if (lat >= -60) return 'South America';
+		}
+		if (lng >= -30 && lng <= 70) {
+			if (lat >= 35) return 'Europe';
+			if (lat >= -40) return 'Africa';
+		}
+		if (lng >= 70 && lng <= 180) {
+			if (lat >= -10) return 'Asia';
+			if (lat < -10) return 'Oceania';
+		}
+		if (lng >= 25 && lng <= 70 && lat >= 10 && lat <= 45) return 'Middle East';
+		
+		// Casos especiais
+		if (lng >= -15 && lng <= 45 && lat >= 35 && lat <= 75) return 'Europe';
+		
+		return 'Asia'; // default
+	}
 
-    defs.append("marker")
-      .attr("id", "arrowhead-highlighted")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 8)
-      .attr("refY", 0)
-      .attr("markerWidth", 5)
-      .attr("markerHeight", 5)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#ff6b6b");
+	function renderFlows() {
+		const svg = d3.select(svgElement);
+		
+		// Sempre limpar fluxos existentes primeiro
+		svg.selectAll('.flow-line').remove();
+		svg.selectAll('.flow-shadow').remove();
+		svg.selectAll('.flow-main').remove();
+		svg.selectAll('.flow-volume').remove();
+		svg.selectAll('.flow-label').remove();
+		
+		// Se não há país selecionado ou dados do mundo, parar aqui
+		if (!selectedCountry || !worldData) {
+			return;
+		}
+		
+		// Usar a mesma projeção do mapa principal - ajustada
+		const width = 750;
+		const height = 400;
+		const projection = d3.geoNaturalEarth1()
+			.scale(115)
+			.translate([width / 2, height / 2]);
 
-    simulation = d3.forceSimulation(nodes)
-      .force("collision", d3.forceCollide().radius(d => d.r + 15).strength(0.9))
-      .force("center", d3.forceCenter(width / 2, height / 2).strength(0.05))
-      .force("position", d3.forceRadial(0, width / 2, height / 2).strength(0.05))
-      .stop();
+		// Filtrar fluxos do país selecionado com base nos controles
+		// LÓGICA DE FILTRO:
+		// - EMIGRAÇÃO: flow.origin === selectedCountry (pessoas que SAÍRAM do país selecionado)
+		// - IMIGRAÇÃO: flow.destination === selectedCountry (pessoas que CHEGARAM ao país selecionado)
+		let relevantFlows = migrationFlows.filter(flow => {
+			const isEmigration = flow.origin === selectedCountry;      // Saiu deste país
+			const isImmigration = flow.destination === selectedCountry; // Chegou neste país
+			
+			// Aplicar filtros de exibição
+			if (isEmigration && !showEmigration) return false;
+			if (isImmigration && !showImmigration) return false;
+			
+			return isEmigration || isImmigration;
+		});
 
-    for (let i = 0; i < 200; i++) simulation.tick();
 
-    const flows = svg.append("g").selectAll("path")
-      .data(migrationData)
-      .enter()
-      .append("path")
-      .attr("fill", "none")
-      .attr("stroke", "#ffd700")
-      .attr("stroke-width", d => Math.max(1, Math.sqrt(d.count) * 1.2))
-      .attr("stroke-opacity", 0.6)
-      .attr("marker-end", "url(#arrowhead)")
-      .style("cursor", "pointer")
-      .attr("d", d => {
-        const sourceNode = nodes.find(n => n.name === d.source);
-        const targetNode = nodes.find(n => n.name === d.target);
-        
-        if (sourceNode && targetNode) {
-          const dx = targetNode.x - sourceNode.x;
-          const dy = targetNode.y - sourceNode.y;
-          const dr = Math.sqrt(dx * dx + dy * dy) * 0.5;
-          return `M${sourceNode.x},${sourceNode.y}A${dr},${dr} 0 0,1 ${targetNode.x},${targetNode.y}`;
-        }
-        return "";
-      })
-      .on("mouseover", function(event, d) {
-        d3.select(this)
-          .attr("stroke-opacity", 0.9)
-          .attr("stroke-width", Math.max(2, Math.sqrt(d.count) * 1.8));
-        showTooltip(event, `${d.source} → ${d.target}\n${d.count} bilionário${d.count > 1 ? 's' : ''} migraram`);
-      })
-      .on("mouseout", function(event, d) {
-        if (!selectedCountry || (d.source !== selectedCountry && d.target !== selectedCountry)) {
-          d3.select(this)
-            .attr("stroke-opacity", 0.6)
-            .attr("stroke-width", Math.max(1, Math.sqrt(d.count) * 1.2));
-        }
-        hideTooltip();
-      });
 
-    const countryCircles = svg.append("g").selectAll("circle")
-      .data(nodes)
-      .enter()
-      .append("circle")
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y)
-      .attr("r", d => d.r)
-      .attr("fill", d => getCountryColor(d.name))
-      .attr("fill-opacity", 0.8)
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2)
-      .style("cursor", "pointer")
-      .on("mouseover", function(event, d) {
-        if (!selectedCountry) {
-          d3.select(this).transition().duration(200).attr("fill-opacity", 1).attr("stroke-width", 3);
-        }
-        const continent = countryToContinentMap[d.name] || "Não classificado";
-        const netMigrationText = d.stats.netMigration > 0 ? 
-          `+${d.stats.netMigration}` : `${d.stats.netMigration}`;
-        const tooltipText = `${d.name} (${continent})\nTotal: ${d.stats.residents} bilionários\nNativos: ${d.stats.natives}\nImigrantes: ${d.stats.immigrants}\nEmigrantes: ${d.stats.emigrants}\nMigração líquida: ${netMigrationText}\nRiqueza total: $${(d.stats.totalWealth).toFixed(1)}B\nIdade média: ${d.stats.avgAge.toFixed(1)} anos`;
-        showTooltip(event, tooltipText);
-      })
-      .on("mouseout", function(event, d) {
-        if (!selectedCountry || selectedCountry !== d.name) {
-          d3.select(this).transition().duration(200).attr("fill-opacity", 0.8).attr("stroke-width", 2);
-        }
-        hideTooltip();
-      })
-      .on("click", function(event, d) {
-        selectCountry(d.name);
-      });
 
-    svg.append("g").selectAll("text")
-      .data(nodes.filter(d => d.stats.residents >= 3))
-      .enter()
-      .append("text")
-      .attr("x", d => d.x)
-      .attr("y", d => d.y + d.r + 18)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("font-weight", "600")
-      .attr("fill", "#e0e0e0")
-      .style("pointer-events", "none")
-      .text(d => d.name);
 
-    function selectCountry(countryName) {
-      if (selectedCountry === countryName) {
-        selectedCountry = null;
-        resetVisualization();
-      } else {
-        selectedCountry = countryName;
-        highlightCountryFlows(countryName);
-      }
-    }
+		// Criar defs para gradientes e marcadores (já limpamos os fluxos acima)
+		const defs = svg.select('defs').empty() ? svg.append('defs') : svg.select('defs');
+		defs.selectAll('[id^="arrowhead"], [id^="flow-gradient"]').remove();
 
-    function resetVisualization() {
-      countryCircles.attr("fill", d => getCountryColor(d.name)).attr("fill-opacity", 0.8).attr("stroke-width", 2);
-      flows.attr("stroke", "#ffd700")
-           .attr("stroke-opacity", 0.6)
-           .attr("stroke-width", d => Math.max(1, Math.sqrt(d.count) * 1.2))
-           .attr("marker-end", "url(#arrowhead)");
-    }
+		// Função para obter coordenadas do centro do país
+		function getCountryCenter(countryName) {
+			// Primeiro: buscar no GeoJSON pois tem coordenadas mais precisas
+			const feature = worldData.features.find(f => {
+				const geoName = f.properties.NAME || f.properties.name;
+				return isCountryMatch(geoName, countryName);
+			});
+			
+			if (feature) {
+				const centroid = d3.geoCentroid(feature);
+				return projection(centroid);
+			}
+			
+			// Fallback: tentar coordenadas do dataset
+			const countryData = filteredData.find(d => 
+				d.country === countryName || d.countryOfCitizenship === countryName
+			);
+			if (countryData && countryData.latitude_country && countryData.longitude_country) {
+				const coords = projection([+countryData.longitude_country, +countryData.latitude_country]);
+				if (coords && !isNaN(coords[0]) && !isNaN(coords[1])) {
+					return coords;
+				}
+			}
+			
+			return null;
+		}
 
-    function highlightCountryFlows(countryName) {
-      countryCircles
-        .attr("fill", d => d.name === countryName ? "#ff6b6b" : getCountryColor(d.name))
-        .attr("fill-opacity", d => d.name === countryName ? 1 : 0.3)
-        .attr("stroke-width", d => d.name === countryName ? 4 : 2);
+		// Renderizar linhas de fluxo melhoradas
+		relevantFlows.forEach((flow, index) => {
+			const originCoords = getCountryCenter(flow.origin);
+			const destCoords = getCountryCenter(flow.destination);
+			
+			if (originCoords && destCoords) {
+				const line = d3.line()
+					.x(d => d[0])
+					.y(d => d[1])
+					.curve(d3.curveCardinal);
 
-      flows
-        .attr("stroke", d => (d.source === countryName || d.target === countryName) ? "#ff6b6b" : "#ffd700")
-        .attr("stroke-opacity", d => (d.source === countryName || d.target === countryName) ? 0.9 : 0.1)
-        .attr("stroke-width", d => (d.source === countryName || d.target === countryName) ? Math.max(2, Math.sqrt(d.count) * 2) : Math.max(1, Math.sqrt(d.count) * 1.2))
-        .attr("marker-end", d => (d.source === countryName || d.target === countryName) ? "url(#arrowhead-highlighted)" : "url(#arrowhead)");
-    }
-  }
+				// Calcular curva com offset para evitar sobreposição
+				const offsetY = index % 2 === 0 ? -20 - (index * 5) : -40 - (index * 5);
+				const midX = (originCoords[0] + destCoords[0]) / 2;
+				const midY = (originCoords[1] + destCoords[1]) / 2 + offsetY;
+				
+				const pathData = line([originCoords, [midX, midY], destCoords]);
 
-  function showTooltip(event, text) {
-    if (!tooltip) {
-      tooltip = d3.select("body").append("div")
-        .attr("class", "map-tooltip")
-        .style("position", "absolute")
-        .style("background", "rgba(0, 0, 0, 0.95)")
-        .style("color", "#ffd700")
-        .style("padding", "12px")
-        .style("border-radius", "6px")
-        .style("font-size", "12px")
-        .style("font-weight", "500")
-        .style("pointer-events", "none")
-        .style("white-space", "pre-line")
-        .style("z-index", "1000")
-        .style("border", "1px solid #ffd700")
-        .style("box-shadow", "0 4px 8px rgba(0,0,0,0.3)");
-    }
-    
-    tooltip.html(text)
-      .style("opacity", 1)
-      .style("left", (event.pageX + 10) + "px")
-      .style("top", (event.pageY - 10) + "px");
-  }
+				// Determinar cor e largura baseado no fluxo e volume
+				const isOutgoing = flow.origin === selectedCountry;
+				const baseColor = isOutgoing ? '#ffd700' : '#ff6b6b'; // Dourado (emigração) e coral (imigração) do radar
+				const strokeWidth = Math.max(2, Math.min(8, Math.sqrt(flow.count) * 2));
+				
+				// Criar gradiente único para cada fluxo
+				const gradientId = `flow-gradient-${index}`;
+				const gradient = defs.append('linearGradient')
+					.attr('id', gradientId)
+					.attr('x1', '0%')
+					.attr('y1', '0%')
+					.attr('x2', '100%')
+					.attr('y2', '0%');
+				
+				gradient.append('stop')
+					.attr('offset', '0%')
+					.attr('stop-color', baseColor)
+					.attr('stop-opacity', 0.7);
+				
+				gradient.append('stop')
+					.attr('offset', '50%')
+					.attr('stop-color', baseColor)
+					.attr('stop-opacity', 1);
+					
+				gradient.append('stop')
+					.attr('offset', '100%')
+					.attr('stop-color', d3.color(baseColor).darker(0.5))
+					.attr('stop-opacity', 0.8);
 
-  function hideTooltip() {
-    if (tooltip) tooltip.style("opacity", 0);
-  }
+				// Criar sombra sutil
+				svg.append('path')
+					.attr('class', 'flow-shadow')
+					.attr('d', pathData)
+					.attr('fill', 'none')
+					.attr('stroke', '#000000')
+					.attr('stroke-width', strokeWidth + 1)
+					.attr('opacity', 0.3)
+					.attr('transform', 'translate(1, 1)')
+					.style('pointer-events', 'none');
 
-  $: if (data.length > 0 && svgElement) {
-    updateFilteredData();
-  }
+				// Criar linha principal
+				const mainPath = svg.append('path')
+					.attr('class', 'flow-main')
+					.attr('d', pathData)
+					.attr('fill', 'none')
+					.attr('stroke', `url(#${gradientId})`)
+					.attr('stroke-width', strokeWidth)
+					.attr('opacity', 0.9)
+					.attr('marker-end', `url(#arrowhead-${isOutgoing ? 'out' : 'in'})`)
+					.style('cursor', 'pointer')
+					.on('mouseover', function(event) {
+						// Highlight da linha
+						d3.select(this)
+							.transition()
+							.duration(150)
+							.attr('opacity', 1)
+							.attr('stroke-width', strokeWidth + 1);
+						
+						// Mostrar tooltip com lógica correta
+						const isOutgoing = flow.origin === selectedCountry;
+						let directionText, directionDetail;
+						
+						if (isOutgoing) {
+							// Emigração: pessoas saíram do país selecionado
+							directionText = 'emigração';
+							directionDetail = `Saíram de ${flow.origin}`;
+						} else {
+							// Imigração: pessoas chegaram ao país selecionado  
+							directionText = 'imigração';
+							directionDetail = `Chegaram em ${flow.destination}`;
+						}
+						
+						const percentage = ((flow.count / filteredData.length) * 100).toFixed(1);
+						
+						tooltip = {
+							show: true,
+							x: event.offsetX + 10,
+							y: event.offsetY - 10,
+							content: `
+								<div style="text-align: center;">
+									<div style="font-weight: bold; color: #ffd700; margin-bottom: 4px;">${flow.origin} → ${flow.destination}</div>
+									<div style="color: ${baseColor}; font-weight: 600; margin-bottom: 2px;">${flow.count} bilionários</div>
+									<div style="font-size: 10px; color: #bdc3c7;">${percentage}% do total</div>
+									<div style="font-size: 9px; color: #95a5a6; margin-top: 2px;">${directionDetail} (${directionText})</div>
+								</div>
+							`
+						};
+					})
+					.on('mouseout', function() {
+						// Remover highlight
+						d3.select(this)
+							.transition()
+							.duration(150)
+							.attr('opacity', 0.9)
+							.attr('stroke-width', strokeWidth);
+						
+						tooltip = { show: false, x: 0, y: 0, content: '' };
+					});
 
-  $: if (selectedIndustry || selectedGender) {
-    if (data.length > 0 && svgElement) {
-      updateFilteredData();
-    }
-  }
+				// Adicionar ponto no meio para volume (menor e mais discreto)
+				const volumeRadius = Math.max(2, Math.min(6, flow.count * 0.8));
+				svg.append('circle')
+					.attr('class', 'flow-volume')
+					.attr('cx', midX)
+					.attr('cy', midY)
+					.attr('r', volumeRadius)
+					.attr('fill', baseColor)
+					.attr('stroke', '#ffffff')
+					.attr('stroke-width', 1)
+					.attr('opacity', 0.9)
+					.style('cursor', 'pointer')
+					.on('mouseover', function(event) {
+						d3.select(this)
+							.transition()
+							.duration(150)
+							.attr('r', volumeRadius + 1)
+							.attr('opacity', 1);
+						
+						tooltip = {
+							show: true,
+							x: event.offsetX + 10,
+							y: event.offsetY - 10,
+							content: `
+								<div style="text-align: center;">
+									<div style="font-weight: bold; color: #ffd700; margin-bottom: 4px;">Volume</div>
+									<div style="color: ${baseColor}; font-weight: 600; margin-bottom: 2px;">${flow.count} bilionários</div>
+									<div style="font-size: 10px; color: #bdc3c7;">${flow.origin} → ${flow.destination}</div>
+								</div>
+							`
+						};
+					})
+					.on('mouseout', function() {
+						d3.select(this)
+							.transition()
+							.duration(150)
+							.attr('r', volumeRadius)
+							.attr('opacity', 0.9);
+						
+						tooltip = { show: false, x: 0, y: 0, content: '' };
+					});
+
+				// Label com número (apenas para fluxos maiores) - fonte menor
+				if (flow.count >= 3) {
+					svg.append('text')
+						.attr('class', 'flow-label')
+						.attr('x', midX)
+						.attr('y', midY + 2)
+						.attr('text-anchor', 'middle')
+						.attr('fill', '#ffffff')
+						.attr('font-size', '8px') // Reduzido de 9px
+						.attr('font-weight', 'bold')
+						.style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)')
+						.style('pointer-events', 'none')
+						.text(flow.count);
+				}
+			}
+		});
+
+		// Criar marcadores de seta melhorados - menores
+		// Seta para emigração (dourada)
+		const arrowOut = defs.append('marker')
+			.attr('id', 'arrowhead-out')
+			.attr('viewBox', '0 -5 8 10') // Reduzido
+			.attr('refX', 7) // Ajustado
+			.attr('refY', 0)
+			.attr('markerWidth', 5) // Reduzido de 6
+			.attr('markerHeight', 5) // Reduzido de 6
+			.attr('orient', 'auto');
+		
+		arrowOut.append('path')
+			.attr('d', 'M0,-3L6,0L0,3L1,0Z') // Ajustado
+			.attr('fill', '#ffd700')
+			.attr('stroke', '#2c3e50')
+			.attr('stroke-width', 0.5);
+		
+		// Seta para imigração (coral)
+		const arrowIn = defs.append('marker')
+			.attr('id', 'arrowhead-in')
+			.attr('viewBox', '0 -5 8 10') // Reduzido
+			.attr('refX', 7) // Ajustado
+			.attr('refY', 0)
+			.attr('markerWidth', 5) // Reduzido de 6
+			.attr('markerHeight', 5) // Reduzido de 6
+			.attr('orient', 'auto');
+		
+		arrowIn.append('path')
+			.attr('d', 'M0,-3L6,0L0,3L1,0Z') // Ajustado
+			.attr('fill', '#ff6b6b')
+			.attr('stroke', '#2c3e50')
+			.attr('stroke-width', 0.5);
+	}
 </script>
 
-<div class="map-container">
-  <div class="controls-panel">
-    <div class="control-group">
-      <label for="industry-select">Filtro por Indústria:</label>
-      <select id="industry-select" bind:value={selectedIndustry}>
-        {#each industries as industry}
-          <option value={industry}>{industry}</option>
-        {/each}
-      </select>
-    </div>
-
-    <div class="control-group">
-      <label for="gender-select">Filtro por Gênero:</label>
-      <select id="gender-select" bind:value={selectedGender}>
-        {#each genders as gender}
-          <option value={gender}>{gender}</option>
-        {/each}
-      </select>
-    </div>
-
-    <div class="control-group">
-      <button 
-        class="stats-toggle"
-        on:click={() => showStatisticsPanel = !showStatisticsPanel}
-      >
-        {showStatisticsPanel ? 'Ocultar' : 'Mostrar'} Estatísticas
-      </button>
-    </div>
+<div class="migration-map-container">
+	<div class="map-header">
+		<h3>Mapa de Migração de Bilionários</h3>
+		<p>Clique nos países para visualizar fluxos migratórios</p>
+		
+		<!-- Controles organizados -->
+		<div class="controls-container">
+			<!-- Filtro por indústria -->
+			<div class="filter-section">
+				<label for="industry-filter">Indústria:</label>
+				<select id="industry-filter" bind:value={filterIndustry}>
+					<option value="all">Todas</option>
+					{#each uniqueIndustries.slice(1) as industry}
+						<option value={industry}>{industry}</option>
+					{/each}
+				</select>
+			</div>
+			
+			<!-- Controles de fluxo -->
+			<div class="flow-controls">
+				<label class="control-toggle">
+					<input 
+						type="checkbox" 
+						bind:checked={showEmigration}
+						on:change={() => renderFlows()}
+					/>
+					<span class="toggle-switch emigration"></span>
+					Emigração
+				</label>
+				<label class="control-toggle">
+					<input 
+						type="checkbox" 
+						bind:checked={showImmigration}
+						on:change={() => renderFlows()}
+					/>
+					<span class="toggle-switch immigration"></span>
+					Imigração
+				</label>
+			</div>
+		</div>
+	</div>
     
-    <div class="continent-legend">
-      <span class="legend-label">Legenda de Continentes:</span>
-      <div class="legend-items">
-        {#each Object.entries(continentColors) as [continent, color]}
-          <div class="legend-item">
-            <div class="legend-color" style="background-color: {color}"></div>
-            <span class="legend-text">{continent}</span>
-          </div>
-        {/each}
-      </div>
-    </div>
-  </div>
+	<div class="map-wrapper">
+		<svg bind:this={svgElement} width="750" height="400"></svg>
+		
+		{#if tooltip.show}
+			<div 
+				class="tooltip" 
+				style="left: {tooltip.x}px; top: {tooltip.y}px;"
+			>
+				{@html tooltip.content}
+			</div>
+		{/if}
+	</div>
 
-  {#if showStatisticsPanel}
-    <div class="statistics-panel">
-      <h3>Estatísticas Globais</h3>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-label">Total de Bilionários:</span>
-          <span class="stat-value">{filteredData.length}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Países com Bilionários:</span>
-          <span class="stat-value">{Object.keys(countryStats).length}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Fluxos Migratórios:</span>
-          <span class="stat-value">{migrationData.length}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Riqueza Total:</span>
-          <span class="stat-value">
-            ${Object.values(countryStats).reduce((sum, stats) => sum + stats.totalWealth, 0).toFixed(1)}B
-          </span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Filtros Ativos:</span>
-          <span class="stat-value">{selectedIndustry} | {selectedGender}</span>
-        </div>
-        {#if selectedCountry && countryStats[selectedCountry]}
-          <div class="stat-item selected-country">
-            <span class="stat-label">{selectedCountry}:</span>
-            <span class="stat-value">
-              {countryStats[selectedCountry].residents} bilionários
-              ({countryStats[selectedCountry].natives} nativos, {countryStats[selectedCountry].immigrants} imigrantes)
-            </span>
-          </div>
-          <div class="stat-item migration-details">
-            <span class="stat-label">Detalhes Migratórios:</span>
-            <span class="stat-value">
-              {countryStats[selectedCountry].emigrants} emigrantes
-            </span>
-          </div>
-          <div class="stat-item net-migration {countryStats[selectedCountry].netMigration >= 0 ? 'positive' : 'negative'}">
-            <span class="stat-label">Migração Líquida:</span>
-            <span class="stat-value net-migration-value">
-              {countryStats[selectedCountry].netMigration >= 0 ? '+' : ''}{countryStats[selectedCountry].netMigration}
-              {#if countryStats[selectedCountry].netMigration > 0}
-                <span class="migration-indicator">📈 Ganho</span>
-              {:else if countryStats[selectedCountry].netMigration < 0}
-                <span class="migration-indicator">📉 Perda</span>
-              {:else}
-                <span class="migration-indicator">⚖️ Neutro</span>
-              {/if}
-            </span>
-          </div>
-        {/if}
-      </div>
-    </div>
-  {/if}
-
-  <div class="map-visualization">
-    <svg bind:this={svgElement} {width} {height}></svg>
-  </div>
+	{#if selectedCountry}
+		<div class="selection-info">
+			<p>País selecionado: <strong>{selectedCountry}</strong></p>
+			<p><small>
+				<strong>Dourado (Emigração):</strong> bilionários que <u>saíram</u> de {selectedCountry} • 
+				<strong>Coral (Imigração):</strong> bilionários que <u>chegaram</u> em {selectedCountry}
+			</small></p>
+			<p><small>
+				Base: país de cidadania → país de residência atual • Use os controles para filtrar tipos de fluxo
+			</small></p>
+		</div>
+	{/if}
 </div>
 
 <style>
-  .map-container {
-    width: 100%;
-    max-width: 1050px;
-    margin: 0 auto;
-    font-family: 'Arial', sans-serif;
-  }
+	.migration-map-container {
+		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
+		border-radius: 10px; /* Mais compacto */
+		padding: 16px; /* Mais compacto */
+		margin: 12px 0; /* Mais compacto */
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+		border: 1px solid rgba(255, 215, 0, 0.2);
+		max-width: 800px; /* Limitar largura máxima */
+		margin: 12px auto; /* Centralizar */
+	}
 
-  .controls-panel {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    padding: 20px;
-    background: #2a2a2a;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 1px solid #444;
-  }
+	.map-header {
+		text-align: center;
+		margin-bottom: 12px; /* Mais compacto */
+	}
 
-  .control-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+	.map-header h3 {
+		background: linear-gradient(135deg, #ffd700 0%, #f39c12 100%);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-clip: text;
+		font-size: 18px; /* Menor para caber melhor */
+		font-weight: 700;
+		margin: 0 0 6px 0; /* Mais compacto */
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
 
-  .control-group label {
-    font-size: 14px;
-    color: #e0e0e0;
-    font-weight: 500;
-  }
+	.map-header p {
+		color: #cbd5e1;
+		font-size: 12px; /* Menor */
+		margin: 0;
+		opacity: 0.9;
+	}
 
-  .stats-toggle {
-    padding: 8px 16px;
-    background: #ffd700;
-    color: #000;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background 0.2s;
-  }
 
-  .stats-toggle:hover {
-    background: #ffed4e;
-  }
 
-  select {
-    padding: 8px 12px;
-    border: 1px solid #555;
-    border-radius: 4px;
-    background: #1a1a1a;
-    color: #e0e0e0;
-    font-size: 14px;
-    min-width: 150px;
-  }
+	.map-wrapper {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		background: linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%);
+		border-radius: 6px; /* Mais compacto */
+		padding: 8px; /* Mais compacto */
+		border: 1px solid rgba(255, 215, 0, 0.3); /* Borda mais sutil */
+		width: 100%;
+		overflow-x: auto;
+		box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2); /* Sombra mais sutil */
+	}
 
-  select:focus {
-    outline: none;
-    border-color: #ffd700;
-  }
+	.tooltip {
+		position: absolute;
+		background: rgba(15, 23, 42, 0.95);
+		color: white;
+		padding: 8px 12px; /* Mais compacto */
+		border-radius: 6px; /* Mais clean */
+		font-size: 11px; /* Menor */
+		font-weight: 500;
+		pointer-events: none;
+		z-index: 1000;
+		border: 1px solid rgba(255, 215, 0, 0.5);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+		backdrop-filter: blur(8px);
+		max-width: 200px;
+		line-height: 1.3;
+		transition: opacity 0.2s ease;
+	}
 
-  .statistics-panel {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-  }
 
-  .statistics-panel h3 {
-    color: #ffd700;
-    margin: 0 0 15px 0;
-    font-size: 18px;
-  }
 
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
-  }
+	.selection-info {
+		text-align: center;
+		margin-top: 8px; /* Mais compacto */
+		padding: 6px 12px; /* Mais compacto */
+		background: rgba(255, 215, 0, 0.1); /* Mais sutil */
+		border-radius: 4px; /* Mais compacto */
+		border: 1px solid rgba(255, 215, 0, 0.25); /* Mais sutil */
+	}
 
-  .stat-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background: #1a1a1a;
-    border-radius: 6px;
-    border: 1px solid #444;
-  }
+	.selection-info p {
+		color: #e2e8f0;
+		margin: 3px 0; /* Mais compacto */
+		font-size: 11px; /* Menor */
+	}
 
-  .stat-item.selected-country {
-    border-color: #ff6b6b;
-    background: rgba(255, 107, 107, 0.1);
-  }
+	.selection-info strong {
+		color: #ffd700;
+		font-weight: 600;
+	}
 
-  .stat-item.migration-details {
-    border-color: #ffd700;
-    background: rgba(255, 215, 0, 0.1);
-  }
+	.selection-info small {
+		color: #94a3b8;
+		font-size: 9px; /* Menor para economizar espaço */
+	}
 
-  .stat-item.net-migration.positive {
-    border-color: #10b981;
-    background: rgba(16, 185, 129, 0.1);
-  }
+	/* Controles organizados */
+	.controls-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 16px; /* Menor espaçamento */
+		margin-top: 8px; /* Mais compacto */
+		flex-wrap: wrap;
+	}
 
-  .stat-item.net-migration.negative {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-  }
+	.filter-section {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
 
-  .migration-indicator {
-    font-size: 12px;
-    margin-left: 8px;
-    font-weight: normal;
-  }
+	.filter-section label {
+		color: #e2e8f0;
+		font-size: 11px;
+		font-weight: 500;
+		margin: 0;
+	}
 
-  .net-migration-value {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
+	.filter-section select {
+		padding: 4px 8px;
+		border-radius: 6px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		background: rgba(0, 0, 0, 0.3);
+		color: #e0e0e0;
+		font-size: 10px;
+		cursor: pointer;
+		min-width: 120px;
+		transition: all 0.2s ease;
+	}
 
-  .stat-label {
-    color: #b0b0b0;
-    font-size: 14px;
-  }
+	.filter-section select:hover {
+		background: rgba(0, 0, 0, 0.4);
+		border-color: rgba(255, 255, 255, 0.3);
+	}
 
-  .stat-value {
-    color: #ffd700;
-    font-weight: 600;
-    font-size: 14px;
-  }
+	.filter-section select:focus {
+		outline: none;
+		border-color: #4ecdc4;
+		box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+	}
 
-  .map-visualization {
-    background: #1a1a1a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    margin-bottom: 20px;
-  }
+	/* Responsividade otimizada para 918x857 */
+	@media (max-width: 920px) {
+		.migration-map-container {
+			max-width: 100%;
+			padding: 12px;
+		}
+		
+		.map-wrapper {
+			overflow-x: auto;
+		}
+		
+		.map-wrapper svg {
+			min-width: 750px;
+		}
+		
+		.map-header h3 {
+			font-size: 16px;
+		}
 
-  .continent-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+		.controls-container {
+			flex-direction: column;
+			gap: 8px;
+		}
+	}
 
-  .continent-legend span.legend-label {
-    font-size: 14px;
-    color: #e0e0e0;
-    font-weight: 500;
-  }
+	.flow-controls {
+		display: flex;
+		justify-content: center;
+		gap: 12px; /* Reduzido de 16px */
+		flex-wrap: wrap;
+	}
 
-  .legend-items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
+	.control-toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px; /* Reduzido de 8px */
+		color: #e2e8f0;
+		font-size: 11px; /* Reduzido de 13px */
+		font-weight: 500;
+		cursor: pointer;
+		padding: 4px 10px; /* Reduzido de 6px 12px */
+		background: rgba(255, 215, 0, 0.1);
+		border-radius: 12px; /* Reduzido de 16px */
+		border: 1px solid rgba(255, 215, 0, 0.2);
+		transition: all 0.2s ease;
+	}
 
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+	.control-toggle:hover {
+		background: rgba(255, 215, 0, 0.2);
+		border-color: rgba(255, 215, 0, 0.4);
+	}
 
-  .legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  }
+	.control-toggle input[type="checkbox"] {
+		display: none;
+	}
 
-  .legend-text {
-    font-size: 12px;
-    color: #e0e0e0;
-    font-weight: 500;
-  }
+	.toggle-switch {
+		width: 28px; /* Reduzido de 32px */
+		height: 14px; /* Reduzido de 16px */
+		border-radius: 7px; /* Ajustado */
+		border: 1px solid;
+		position: relative;
+		transition: all 0.2s ease;
+	}
 
-  @media (max-width: 768px) {
-    .controls-panel {
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    .control-group {
-      flex-direction: column;
-      align-items: flex-start;
-    }
+	.toggle-switch.emigration {
+		border-color: #ffd700;
+		background: rgba(255, 215, 0, 0.3);
+	}
 
-    .stats-grid {
-      grid-template-columns: 1fr;
-    }
+	.toggle-switch.immigration {
+		border-color: #ff6b6b;
+		background: rgba(255, 107, 107, 0.3);
+	}
 
-    .legend-items {
-      justify-content: flex-start;
-    }
-  }
+	.control-toggle input:checked + .toggle-switch.emigration {
+		background: #ffd700;
+		border-color: #ffd700;
+		box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+	}
 
-  :global(.map-tooltip) {
-    font-family: 'Arial', sans-serif;
-  }
+	.control-toggle input:checked + .toggle-switch.immigration {
+		background: #ff6b6b;
+		border-color: #ff6b6b;
+		box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+	}
+
+	.toggle-switch::before {
+		content: '';
+		position: absolute;
+		width: 10px; /* Reduzido de 12px */
+		height: 10px; /* Reduzido de 12px */
+		border-radius: 50%;
+		background: #ffffff;
+		top: 1px;
+		left: 1px;
+		transition: all 0.2s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+	}
+
+	.control-toggle input:checked + .toggle-switch::before {
+		transform: translateX(14px); /* Ajustado de 16px */
+	}
 </style> 

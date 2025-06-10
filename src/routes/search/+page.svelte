@@ -71,11 +71,15 @@
     }
   });
 
-  // Função para navegar para a página de trajetória
-  async function navigateToTrajectory(event) {
+  // Função para navegar para outras páginas
+  async function navigateToPage(event, targetPath) {
     event.preventDefault();
-    const targetHref = event.currentTarget.href;
-    window.location.href = targetHref;
+    const pageContainer = document.getElementById('search-page-container');
+    if (pageContainer) {
+      pageContainer.classList.add('fading-out');
+      await new Promise(resolve => setTimeout(resolve, 700));
+    }
+    window.location.href = targetPath;
   }
 </script>
 
@@ -114,13 +118,40 @@
   </section>
 
   <section class="search-navigation-section">
-    <a href="{base}/trajetoria" class="nav-button-container back-button" on:click={navigateToTrajectory}>
-        <div class="nav-arrow-button back-arrow-icon">
-        <span>&larr;</span> 
-        </div>
-        <div class="nav-button-text">
-        Voltar para Trajetória
-        </div>
-    </a>
+    <div class="final-navigation-container">
+      <div class="progress-indicator">
+        <div class="progress-step completed">1</div>
+        <div class="progress-line completed"></div>
+        <div class="progress-step completed">2</div>
+        <div class="progress-line completed"></div>
+        <div class="progress-step active">3</div>
+      </div>
+      
+             <h3 class="completion-title">Parabéns! Você completou a jornada</h3>
+      <p class="completion-text">
+        Agora você tem todas as ferramentas para explorar e analisar os dados dos bilionários. 
+        Continue investigando ou volte para revisar qualquer seção.
+      </p>
+      
+      <div class="final-nav-buttons">
+                 <a href="{base}/" class="final-nav-btn home-btn" on:click={(e) => navigateToPage(e, `${base}/`)}>
+           <div class="final-nav-content">
+             <div class="final-nav-text">
+               <div class="final-nav-title">Início</div>
+               <div class="final-nav-subtitle">Revisar a análise completa</div>
+             </div>
+           </div>
+         </a>
+        
+                 <a href="{base}/trajetoria" class="final-nav-btn trajectory-btn" on:click={(e) => navigateToPage(e, `${base}/trajetoria`)}>
+           <div class="final-nav-content">
+             <div class="final-nav-text">
+               <div class="final-nav-title">Trajetória</div>
+               <div class="final-nav-subtitle">Explorar fluxos migratórios</div>
+             </div>
+           </div>
+         </a>
+      </div>
+    </div>
   </section>
 </div> 

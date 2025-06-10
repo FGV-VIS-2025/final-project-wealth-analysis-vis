@@ -52,22 +52,52 @@
     config: genderConfig[d.gender] || { color: '#6b7280', label: d.gender, icon: '?', lightColor: '#9ca3af' }
   }));
 
-  function getTopCountriesByGender(gender, limit = 8) {
+    function getTopCountriesByGender(gender, limit = 8) {
     if (!allData || allData.length === 0) return [];
     
-    const countryGenderCounts = {};
+    const countryStats = {};
     
+    // Primeiro, contar todos os bilionários por país
     allData.forEach(person => {
-      if (person.gender === gender) {
-        const country = person.country || 'Unknown';
-        countryGenderCounts[country] = (countryGenderCounts[country] || 0) + 1;
+      const country = person.country;
+      if (country && country !== 'Unknown' && country.trim() !== '' && country.toLowerCase() !== 'unknown') {
+        if (!countryStats[country]) {
+          countryStats[country] = { 
+            total: 0, 
+            byGender: { M: 0, F: 0 }
+          };
+        }
+        countryStats[country].total++;
+        
+        if (person.gender === 'M') {
+          countryStats[country].byGender.M++;
+        } else if (person.gender === 'F') {
+          countryStats[country].byGender.F++;
+        }
       }
     });
 
-    return Object.entries(countryGenderCounts)
-      .map(([country, count]) => ({ country, count, gender }))
-      .sort((a, b) => b.count - a.count)
+    // Usar EXATAMENTE os mesmos critérios para ambos os gêneros
+    const results = Object.entries(countryStats)
+      .filter(([country, stats]) => {
+        // MESMA REGRA: pelo menos 10 bilionários E ambos os gêneros representados
+        return stats.total >= 10 && stats.byGender.M > 0 && stats.byGender.F > 0;
+      })
+      .map(([country, stats]) => {
+        const genderCount = stats.byGender[gender] || 0;
+        const percentage = stats.total > 0 ? (genderCount / stats.total) * 100 : 0;
+        return { 
+          country, 
+          count: genderCount, 
+          total: stats.total,
+          percentage: percentage.toFixed(1),
+          gender 
+        };
+      })
+      .sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage)) // MAIOR para MENOR - países com MAIS do gênero específico
       .slice(0, limit);
+
+    return results;
   }
 
   function getSelfMadeByGender(gender) {
@@ -114,7 +144,7 @@
     let titleText = 'Distribuição por Gênero';
     if (showBreakdown) {
       if (breakdownType === 'country') {
-        titleText = `Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} por País`;
+        titleText = `Porcentagem de Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} por País`;
       } else {
         titleText = `Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} - Self-Made vs Não Self-Made`;
       }
@@ -276,6 +306,11 @@
       })
       .on('mousemove', function(event) {
         updateTooltipPosition(event);
+      })
+      .on('click', function(event, d) {
+        if (allData && allData.length > 0) {
+          showCountryBreakdown(d.gender);
+        }
       });
 
     svg.append('text')
@@ -300,7 +335,8 @@
         .style('fill', '#e0e0e0')
         .style('font-size', '12px');
 
-    const maxValue = d3.max(data, d => d.count) || 10;
+    // Usar porcentagem como valor principal
+    const maxValue = Math.max(100, d3.max(data, d => parseFloat(d.percentage)) || 50);
     const x = d3.scaleLinear()
       .domain([0, maxValue])
       .range([0, innerWidth]);
@@ -308,9 +344,9 @@
     const xAxis = svg.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x)
-        .tickFormat(d3.format('d'))
+        .tickFormat(d => `${d}%`)
         .ticks(6)
-        .tickValues(x.ticks(6).concat(maxValue)));
+        .tickValues([0, 20, 40, 60, 80, 100]));
     
     xAxis.selectAll('text')
       .style('fill', '#e0e0e0');
@@ -333,7 +369,7 @@
     bars.transition()
       .duration(800)
       .delay((d, i) => i * 40)
-      .attr('width', d => x(d.count));
+      .attr('width', d => x(parseFloat(d.percentage)));
 
     const labels = svg.selectAll('.breakdown-label')
       .data(data)
@@ -351,8 +387,8 @@
       .duration(800)
       .delay((d, i) => i * 40 + 400)
       .style('opacity', 1)
-      .attr('x', d => x(d.count) + 8)
-      .text(d => d.count.toLocaleString());
+      .attr('x', d => x(parseFloat(d.percentage)) + 8)
+      .text(d => `${d.percentage}%`);
 
     bars
       .on('mouseover', function(event, d) {
@@ -379,7 +415,7 @@
       .attr('text-anchor', 'middle')
       .attr('x', innerWidth / 2)
       .attr('y', innerHeight + 40)
-      .text('Número de Bilionários')
+      .text('Porcentagem (%)')
       .style('fill', '#e0e0e0')
       .style('font-size', '14px');
   }
@@ -520,7 +556,12 @@
       content = `
         <div style="background: rgba(0,0,0,0.9); padding: 12px; border-radius: 8px; color: white; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid ${genderConfig[selectedGender]?.color};">
           <div style="font-weight: bold; margin-bottom: 8px; color: ${genderConfig[selectedGender]?.color};">${d.country}</div>
-          <div><strong>Bilionários ${genderConfig[selectedGender]?.label}s:</strong> ${d.count.toLocaleString()}</div>
+          <div><strong>Bilionários ${genderConfig[selectedGender]?.label}s:</strong> ${d.count} de ${d.total}</div>
+          <div><strong>Porcentagem:</strong> ${d.percentage}%</div>
+          <div style="margin-top: 4px; font-size: 11px; color: #ccc;">
+            ${parseFloat(d.percentage) > 50 ? 'Representação acima da média' : 
+              parseFloat(d.percentage) > 20 ? 'Representação moderada' : 'Representação baixa'}
+          </div>
         </div>
       `;
     } else {

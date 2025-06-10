@@ -1,12 +1,14 @@
 <script>
   export let data = []; 
+  export let allData = []; // Dados completos para calcular riqueza total
   import { onMount, afterUpdate } from 'svelte';
   import * as d3 from 'd3';
 
-  let svgElement, tooltip, sortBy = 'count', filterRegion = 'all';
+  let svgElement, tooltip, filterRegion = 'all', filterIndustry = 'all';
   
-  const margin = { top: 60, right: 30, bottom: 80, left: 150 }; 
-  let width = 700, height = 450;
+  // Ajustado para tela 918x857 - dimensões menores
+  const margin = { top: 40, right: 20, bottom: 60, left: 120 }; 
+  let width = 800, height = 400; // Reduzido para caber melhor
   let innerWidth = width - margin.left - margin.right;
   let innerHeight = height - margin.top - margin.bottom;
 
@@ -29,20 +31,47 @@
     'Israel': 'Middle East', 'Turkey': 'Europe', 'Taiwan': 'Asia', 'Thailand': 'Asia'
   };
 
-  $: processedData = data.map(d => ({
-    ...d,
-    region: countryRegions[d.country] || 'Other',
-    color: regionColors[countryRegions[d.country]] || regionColors.default
-  }));
+  // Extrair indústrias dos dados
+  $: uniqueIndustries = allData && allData.length > 0 
+    ? ['all', ...new Set(allData.map(d => d.industries).filter(Boolean)).values()].sort()
+    : ['all'];
 
-  $: filteredData = filterRegion === 'all' ? processedData : processedData.filter(d => d.region === filterRegion);
-
-  $: sortedData = [...filteredData].sort((a, b) => {
-    if (sortBy === 'count') return b.count - a.count;
-    if (sortBy === 'alphabetical') return a.country.localeCompare(b.country);
-    if (sortBy === 'region') return a.region.localeCompare(b.region);
-    return 0;
+  $: processedData = data.map(d => {
+    // Calcular riqueza total para este país, filtrada por indústria se selecionada
+    let countryWealth = 0;
+    if (allData && allData.length > 0) {
+      let countryPeople = allData.filter(person => person.country === d.country);
+      if (filterIndustry !== 'all') {
+        countryPeople = countryPeople.filter(person => person.industries === filterIndustry);
+      }
+      countryWealth = d3.sum(countryPeople, person => +person.finalWorth || 0);
+    }
+    
+    // Recalcular contagem por país considerando filtro de indústria
+    let actualCount = d.count;
+    if (filterIndustry !== 'all' && allData && allData.length > 0) {
+      actualCount = allData.filter(person => 
+        person.country === d.country && person.industries === filterIndustry
+      ).length;
+    }
+    
+    return {
+      ...d,
+      count: actualCount,
+      region: countryRegions[d.country] || 'Other',
+      color: regionColors[countryRegions[d.country]] || regionColors.default,
+      totalWealth: countryWealth
+    };
   });
+
+  $: filteredData = processedData.filter(d => {
+    const regionMatch = filterRegion === 'all' || d.region === filterRegion;
+    const hasData = d.count > 0; // Só mostrar países com dados após filtro de indústria
+    return regionMatch && hasData;
+  });
+
+  // Ordenação padrão por número de bilionários (decrescente)
+  $: sortedData = [...filteredData].sort((a, b) => b.count - a.count);
 
   $: uniqueRegions = [...new Set(processedData.map(d => d.region))].sort();
 
@@ -87,9 +116,10 @@
         .attr('stop-opacity', 1);
     });
 
-    svg.append('text').attr('x', width / 2).attr('y', 30).attr('text-anchor', 'middle')
-      .style('font-size', '18px').style('font-weight', 'bold').style('fill', '#e0e0e0')
-      .text('Bilionários por País');
+    // Título menor
+    svg.append('text').attr('x', width / 2).attr('y', 25).attr('text-anchor', 'middle')
+      .style('font-size', '14px').style('font-weight', 'bold').style('fill', '#e0e0e0')
+      .text('Concentração Global de Bilionários');
 
     const chartGroup = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -104,13 +134,23 @@
       .domain([0, maxValue])
       .range([0, innerWidth]);
 
-    // Criar eixo Y (países) com novo domínio
+    // Criar eixo Y (países) com novo domínio - fonte menor
     const yAxis = chartGroup.append('g')
       .call(d3.axisLeft(y));
     
     yAxis.selectAll('text')
       .style('fill', '#e0e0e0')
-      .style('font-size', '12px');
+      .style('font-size', '10px') // Reduzido de 12px
+      .style('text-anchor', 'end')
+      .each(function(d) {
+        const text = d3.select(this);
+        const words = d.split(' ');
+        if (words.length > 1 && d.length > 12) {
+          text.text('');
+          text.append('tspan').attr('x', -10).attr('dy', '-0.2em').text(words[0]);
+          text.append('tspan').attr('x', -10).attr('dy', '1.2em').text(words.slice(1).join(' '));
+        }
+      });
 
     // Gerar ticks mais proporcionais incluindo o valor máximo
     const tickCount = Math.min(6, Math.floor(maxValue / 50) + 1);
@@ -121,13 +161,14 @@
       tickValues.push(maxValue);
     }
 
-    // Criar eixo X (números) com novos ticks
+    // Criar eixo X (números) com novos ticks - fonte menor
     const xAxis = chartGroup.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(x).tickFormat(d3.format('d')).tickValues(tickValues));
     
     xAxis.selectAll('text')
-      .style('fill', '#e0e0e0');
+      .style('fill', '#e0e0e0')
+      .style('font-size', '10px'); // Reduzido de 12px
 
     // Criar barras com posicionamento correto
     const bars = chartGroup.selectAll('rect')
@@ -150,7 +191,7 @@
       .delay((d, i) => i * 40)
       .attr('width', d => x(d.count));
 
-    // Criar labels das barras
+    // Criar labels das barras - fonte menor
     const labels = chartGroup.selectAll('.bar-label')
       .data(sortedData)
       .join('text')
@@ -158,7 +199,7 @@
       .attr('x', 5)
       .attr('y', d => y(d.country) + y.bandwidth() / 2)
       .attr('dy', '0.35em')
-      .style('font-size', '11px')
+      .style('font-size', '9px') // Reduzido de 11px
       .style('font-weight', 'bold')
       .style('opacity', 0);
 
@@ -191,32 +232,37 @@
       })
       .on('mousemove', function(event) { updateTooltipPosition(event); });
 
-    // Adicionar labels dos eixos
+    // Adicionar labels dos eixos - fonte menor
     chartGroup.append('text')
       .attr('text-anchor', 'middle')
       .attr('x', innerWidth / 2)
-      .attr('y', innerHeight + 40)
+      .attr('y', innerHeight + 35) // Ajustado
       .text('Número de Bilionários')
       .style('fill', '#e0e0e0')
-      .style('font-size', '14px');
+      .style('font-size', '11px'); // Reduzido de 14px
       
     chartGroup.append('text')
       .attr('text-anchor', 'middle')
       .attr('transform', 'rotate(-90)')
-      .attr('y', -100)
+      .attr('y', -80) // Ajustado
       .attr('x', -innerHeight / 2)
       .text('Países')
       .style('fill', '#e0e0e0')
-      .style('font-size', '14px');
+      .style('font-size', '11px'); // Reduzido de 14px
   }
 
   function showTooltip(event, d) {
     if (!tooltip) return;
     const percentage = ((d.count / d3.sum(processedData, d => d.count)) * 100).toFixed(1);
+    const wealthFormatted = d.totalWealth >= 1000 
+      ? `$${(d.totalWealth / 1000).toFixed(1)}T` 
+      : `$${d.totalWealth.toFixed(1)}B`;
+    
     tooltip.style('opacity', 1).html(`
       <div style="background: rgba(0,0,0,0.9); padding: 12px; border-radius: 8px; color: white; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid ${d.color};">
         <div style="font-weight: bold; margin-bottom: 8px; color: ${d.color};">${d.country}</div>
         <div><strong>Bilionários:</strong> ${d.count.toLocaleString()}</div>
+        <div><strong>Riqueza Total:</strong> ${wealthFormatted}</div>
         <div><strong>Região:</strong> ${d.region}</div>
         <div><strong>% do Total:</strong> ${percentage}%</div>
       </div>`);
@@ -235,10 +281,15 @@
   
   function updateDimensions() {
     if (svgElement && svgElement.parentElement) {
-      width = svgElement.parentElement.clientWidth > 0 ? svgElement.parentElement.clientWidth : 700;
-      height = svgElement.parentElement.clientHeight > 0 ? svgElement.parentElement.clientHeight : 450;
-      if (width < 400) width = 400;
-      if (height < 300) height = 300; 
+      const containerWidth = svgElement.parentElement.clientWidth > 0 ? svgElement.parentElement.clientWidth : 800;
+      const containerHeight = svgElement.parentElement.clientHeight > 0 ? svgElement.parentElement.clientHeight : 400;
+      
+      // Limitar dimensões máximas para caber na tela
+      width = Math.min(containerWidth, 800);
+      height = Math.min(containerHeight, 400);
+      
+      if (width < 300) width = 300;
+      if (height < 250) height = 250; 
       innerWidth = width - margin.left - margin.right;
       innerHeight = height - margin.top - margin.bottom;
       drawChart();
@@ -259,23 +310,26 @@
 
 <div class="chart-wrapper">
   <div class="controls">
-    <div class="control-group">
-      <label for="sort-select">Ordenar por:</label>
-      <select id="sort-select" bind:value={sortBy}>
-        <option value="count">Número de Bilionários</option>
-        <option value="alphabetical">Ordem Alfabética</option>
-        <option value="region">Região</option>
-      </select>
-    </div>
-    
-    <div class="control-group">
-      <label for="region-select">Filtrar por Região:</label>
-      <select id="region-select" bind:value={filterRegion}>
-        <option value="all">Todas as Regiões</option>
-        {#each uniqueRegions as region}
-          <option value={region}>{region}</option>
-        {/each}
-      </select>
+    <div class="filters-row">
+      <div class="control-group">
+        <label for="region-select">Região:</label>
+        <select id="region-select" bind:value={filterRegion}>
+          <option value="all">Todas</option>
+          {#each uniqueRegions as region}
+            <option value={region}>{region}</option>
+          {/each}
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="industry-select">Indústria:</label>
+        <select id="industry-select" bind:value={filterIndustry}>
+          <option value="all">Todas</option>
+          {#each uniqueIndustries.slice(1) as industry}
+            <option value={industry}>{industry}</option>
+          {/each}
+        </select>
+      </div>
     </div>
   </div>
 
@@ -303,40 +357,127 @@
     width: 100%;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px; /* Reduzido de 20px */
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  .controls { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-  .control-group { display: flex; flex-direction: column; gap: 5px; }
-  .control-group label { color: #e0e0e0; font-size: 12px; font-weight: 500; }
-  .control-group select {
-    padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.3); color: #e0e0e0; font-size: 13px; cursor: pointer;
+  .controls { 
+    display: flex; 
+    justify-content: center; 
+    margin-bottom: 15px; /* Reduzido de 20px */
   }
+  
+  .filters-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+  
+  .control-group { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px; /* Reduzido de 5px */
+  }
+  
+  .control-group label { 
+    color: #e0e0e0; 
+    font-size: 10px; /* Reduzido de 12px */
+    font-weight: 500; 
+    margin: 0;
+  }
+  
+  .control-group select {
+    padding: 6px 10px; /* Reduzido de 8px 12px */
+    border-radius: 6px; 
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3); 
+    color: #e0e0e0; 
+    font-size: 11px; /* Reduzido de 13px */
+    cursor: pointer;
+    min-width: 100px;
+    transition: all 0.2s ease;
+  }
+  
+  .control-group select:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  
   .control-group select:focus {
-    outline: none; border-color: #4ecdc4; box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+    outline: none; 
+    border-color: #4ecdc4; 
+    box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
   }
 
   .chart-container {
-    width: 100%; height: 450px; display: flex; justify-content: center; align-items: center;
+    width: 100%; 
+    height: 400px; /* Reduzido de 450px */
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
   }
-  svg { max-width: 100%; max-height: 100%; }
+  
+  svg { 
+    max-width: 100%; 
+    max-height: 100%; 
+  }
 
   .legend {
-    margin-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px;
+    margin-top: 12px; /* Reduzido de 15px */
+    border-top: 1px solid rgba(255, 255, 255, 0.1); 
+    padding-top: 12px; /* Reduzido de 15px */
   }
-  .legend h4 { color: #e0e0e0; margin: 0 0 10px 0; font-size: 14px; }
-  .legend-items { display: flex; flex-wrap: wrap; gap: 15px; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #e0e0e0; }
+  
+  .legend h4 { 
+    color: #e0e0e0; 
+    margin: 0 0 8px 0; /* Reduzido de 10px */
+    font-size: 12px; /* Reduzido de 14px */
+  }
+  
+  .legend-items { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 12px; /* Reduzido de 15px */
+  }
+  
+  .legend-item { 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; /* Reduzido de 6px */
+    font-size: 10px; /* Reduzido de 12px */
+    color: #e0e0e0; 
+  }
+  
   .legend-color {
-    width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 14px; /* Reduzido de 16px */
+    height: 14px; /* Reduzido de 16px */
+    border-radius: 3px; 
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   @media (max-width: 768px) {
-    .chart-wrapper { padding: 15px; }
-    .controls { flex-direction: column; gap: 15px; }
-    .chart-container { height: 400px; }
+    .chart-wrapper { 
+      padding: 12px; /* Reduzido de 15px */
+    }
+    
+    .filters-row {
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    .chart-container { 
+      height: 350px; /* Reduzido de 400px */
+    }
+    
+    .control-group select {
+      min-width: 80px;
+      font-size: 10px;
+    }
+    
+    .legend-items {
+      justify-content: center;
+    }
   }
 </style> 

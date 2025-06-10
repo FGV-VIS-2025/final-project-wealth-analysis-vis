@@ -253,15 +253,21 @@
   </section>
 
   <!-- Seção do Mapa de Migração de Bilionários -->
-  <section class="story-section full-width map-section">
-    <div class="map-text-content">
+  <section class="story-section side-by-side map-section-redesigned">
+    <div class="content-third left map-text-content">
       <h2>Fluxos Migratórios da Elite Global</h2>
       <p>
-        Retomando a indagação feita na seção de análise por país, esta visualização revela que países como Brasil, Canadá, Suécia, Noruega, Austrália, entre outros, registram a saída de muitos de seus bilionários.        É razoável supor que o motivo esteja relacionado à alta carga tributária. Diante disso, muitos magnatas optam por migrar para regiões com políticas tributárias mais flexíveis, em busca de um ambiente financeiro menos hostil.
+        <strong>Conectando com as análises anteriores:</strong> Após observarmos as concentrações de bilionários por país e as disparidades de gênero, surge uma questão fundamental: <em>para onde estão indo esses bilionários?</em>
+      </p>
+      <p>
+        Esta visualização interativa revela os padrões migratórios da elite financeira global. Países como Brasil, Canadá e Suécia registram significativa saída de bilionários, enquanto destinos como Estados Unidos, Singapura e Suíça atraem essa população. 
+      </p>
+      <p>
+        <strong>Use a interatividade:</strong> Clique nos países do mapa para focar nos fluxos específicos e descobrir os padrões únicos de cada região.
       </p>
     </div>
     
-    <div class="map-container-wrapper">
+    <div class="content-two-thirds right map-container-wrapper">
       {#if !isLoading && allData.length > 0}
         <BillionaireMigrationMap data={allData} />
       {:else if isLoading}
@@ -278,10 +284,13 @@
   <!-- Nova Seção do Gráfico Radar -->
   <section class="story-section full-width radar-section">
     <div class="radar-text-content">
-      <h2>Raio-X dos Países com Maior Concentração de Bilionários</h2>
+      <h2>Análise Comparativa: Por Que Alguns Países Atraem Bilionários?</h2>
       <p>
-        Para validar nossa hipótese, analisemos as estatísticas dos países com maior concentração de indivíduos dessa classe. Em geral, observa-se que ou o país possui uma carga tributária reduzida, ou, quando há alta tributação, ela é acompanhada por uma moeda desvalorizada e índices de inflação elevados. Raramente se observa um padrão fora dessas duas categorias.
+        Este radar interativo compara múltiplos indicadores econômicos e sociais dos principais países concentradores de riqueza. Selecione até 4 países para comparar suas características em riqueza total, PIB, expectativa de vida, taxa de impostos e inflação.
+        Este radar interativo compara múltiplos indicadores econômicos e sociais dos principais países concentradores de riqueza. Selecione até 4 países para comparar suas características em riqueza total, PIB, expectativa de vida, taxa de impostos e inflação.
+
       </p>
+
     </div>
     
     <div class="radar-container-wrapper">
@@ -299,28 +308,120 @@
   </section>
 
   <section class="story-section navigation-section-wrapper" id="trajetoria-final-nav">
-    <div class="navigation-buttons-container">
+    <div class="enhanced-navigation-container">
+      <div class="progress-indicator">
+        <div class="progress-step completed">1</div>
+        <div class="progress-line completed"></div>
+        <div class="progress-step active">2</div>
+        <div class="progress-line"></div>
+        <div class="progress-step">3</div>
+      </div>
+      
+      <h3 class="nav-section-title">Continue Explorando</h3>
+      
+      <div class="navigation-buttons-container">
         <a href="{base}/" 
-           class="nav-button-container back-button" 
+           class="enhanced-nav-btn back-btn" 
            on:click={(e) => navigateTo(e, `${base}/`)}>
-            <div class="nav-arrow-button back-arrow-icon">
-              <span>&larr;</span> 
-            </div>
-            <div class="nav-button-text">
-              Voltar para Página Inicial
-            </div>
+                         <div class="nav-btn-content">
+               <div class="nav-btn-text">
+                 <div class="nav-btn-title">Página Inicial</div>
+                 <div class="nav-btn-subtitle">Voltar ao início da análise</div>
+               </div>
+               <div class="nav-btn-arrow">
+                 <span>&larr;</span> 
+               </div>
+             </div>
         </a>
         
         <a href="{base}/search" 
-           class="nav-button-container forward-button" 
+           class="enhanced-nav-btn forward-btn" 
            on:click={(e) => navigateTo(e, `${base}/search`)}>
-            <div class="nav-button-text">
-              Explorar Ferramenta de Busca
-            </div>
-            <div class="nav-arrow-button next-arrow-icon">
-              <span>&rarr;</span> 
-            </div>
+                         <div class="nav-btn-content">
+               <div class="nav-btn-text">
+                 <div class="nav-btn-title">Ferramenta de Busca</div>
+                 <div class="nav-btn-subtitle">Explore dados específicos</div>
+               </div>
+               <div class="nav-btn-arrow">
+                 <span>&rarr;</span> 
+               </div>
+             </div>
         </a>
+      </div>
     </div>
   </section>
 </div>
+
+<style>
+  .content-third {
+    flex: 1;
+    max-width: 30%;
+    padding: 2rem;
+  }
+
+  .content-two-thirds {
+    flex: 2;
+    max-width: 70%;
+    padding: 1rem;
+  }
+
+  .map-section-redesigned {
+    align-items: flex-start;
+    gap: 2rem;
+    min-height: 800px;
+  }
+
+  .map-container-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .map-text-content {
+    position: sticky;
+    top: 2rem;
+  }
+
+  .map-text-content h2 {
+    color: #ffd700;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+
+  .map-text-content p {
+    color: #e2e8f0;
+    line-height: 1.7;
+    margin-bottom: 1.2rem;
+    font-size: 16px;
+  }
+
+  .map-text-content strong {
+    color: #ffd700;
+  }
+
+  .map-text-content em {
+    color: #a0aec0;
+    font-style: italic;
+  }
+
+  @media (max-width: 1024px) {
+    .content-third,
+    .content-two-thirds {
+      max-width: 100%;
+      flex: 1;
+    }
+
+    .map-section-redesigned {
+      flex-direction: column;
+      min-height: auto;
+    }
+
+    .map-text-content {
+      position: static;
+      text-align: center;
+    }
+  }
+</style>

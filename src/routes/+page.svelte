@@ -142,7 +142,7 @@
   <section class="story-section side-by-side">
     <div class="chart-content left">
       {#if countryData.length > 0}
-        <CountryBarChart data={countryData} />
+        <CountryBarChart data={countryData} allData={allData} />
       {:else}
         <p class="loading-text">Carregando dados de país...</p>
       {/if}
@@ -177,14 +177,28 @@
 
   <section class="story-section">
     <div class="text-content centered-content">
-        <a href="{base}/trajetoria" class="nav-button-container" on:click={navigateToTrajectory}>
-          <div class="nav-button-text">
-            Para você mesmo responder os questionamentos levantados, preparamos algumas visualizações cativantes.
+        <div class="navigation-section">
+          <h3>Continue a Jornada</h3>
+          <p>Para você mesmo responder os questionamentos levantados, preparamos algumas visualizações cativantes.</p>
+          <a href="{base}/trajetoria" class="nav-button-container enhanced-nav-button" on:click={navigateToTrajectory}>
+                         <div class="nav-content">
+               <div class="nav-text-group">
+                 <div class="nav-title">Explorar Fluxos Migratórios</div>
+                 <div class="nav-subtitle">Descubra para onde os bilionários estão migrando</div>
+               </div>
+               <div class="nav-arrow-button">
+                 <span>&rarr;</span>
+               </div>
+             </div>
+          </a>
+          <div class="progress-indicator">
+            <div class="progress-step active">1</div>
+            <div class="progress-line"></div>
+            <div class="progress-step">2</div>
+            <div class="progress-line"></div>
+            <div class="progress-step">3</div>
           </div>
-          <div class="nav-arrow-button">
-            <span>&rarr;</span>
-          </div>
-        </a>
+        </div>
     </div>
   </section>
 </div>

@@ -8,9 +8,9 @@
   let selectedCountries = new Set();
   let availableCountries = [];
   
-  const width = 400;
-  const height = 400;
-  const margin = 60;
+  const width = 380; // Reduzido para caber na tela 918x857
+  const height = 380; // Proporcionalmente menor
+  const margin = 60; // Margem menor
   const radius = Math.min(width, height) / 2 - margin;
   
   const indicators = [
@@ -115,15 +115,28 @@
         .attr('x1', 0).attr('y1', 0).attr('x2', x).attr('y2', y)
         .attr('stroke', '#666').attr('stroke-width', 2);
       
-      const labelRadius = radius + 30;
+      const labelRadius = radius + 25; // Menor para economizar espaço
       const labelX = Math.cos(angle) * labelRadius;
       const labelY = Math.sin(angle) * labelRadius;
       
-      g.append('text')
+      // Ajustar ancoragem do texto baseado na posição
+      let textAnchor = 'middle';
+      if (labelX > 10) textAnchor = 'start';
+      else if (labelX < -10) textAnchor = 'end';
+      
+      const text = g.append('text')
         .attr('x', labelX).attr('y', labelY)
-        .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
-        .attr('fill', '#e0e0e0').attr('font-size', '12px').attr('font-weight', 'bold')
-        .text(indicator.label);
+        .attr('text-anchor', textAnchor).attr('dominant-baseline', 'middle')
+        .attr('fill', '#e0e0e0').attr('font-size', '10px').attr('font-weight', 'bold'); // Fonte menor
+      
+      // Quebrar texto em múltiplas linhas se necessário
+      const words = indicator.label.split(' ');
+      if (words.length > 1 && indicator.label.length > 12) {
+        text.append('tspan').attr('x', labelX).attr('dy', '-0.5em').text(words[0]);
+        text.append('tspan').attr('x', labelX).attr('dy', '1em').text(words.slice(1).join(' '));
+      } else {
+        text.text(indicator.label);
+      }
     });
     
     const selectedData = processedData.filter(d => selectedCountries.has(d.country));
@@ -142,7 +155,7 @@
       g.append('path')
         .datum(pathCoords).attr('d', d3.line())
         .attr('fill', color).attr('fill-opacity', 0.15)
-        .attr('stroke', color).attr('stroke-width', 3).attr('stroke-opacity', 0.9);
+        .attr('stroke', color).attr('stroke-width', 2.5).attr('stroke-opacity', 0.9); // Linha mais fina
       
       countryData.normalized.forEach((d, i) => {
         const angle = angleSlice * i - Math.PI / 2;
@@ -151,8 +164,8 @@
         const y = Math.sin(angle) * r;
         
         g.append('circle')
-          .attr('cx', x).attr('cy', y).attr('r', 4)
-          .attr('fill', color).attr('stroke', '#fff').attr('stroke-width', 2)
+          .attr('cx', x).attr('cy', y).attr('r', 3) // Pontos menores
+          .attr('fill', color).attr('stroke', '#fff').attr('stroke-width', 1.5) // Borda menor
           .style('cursor', 'pointer')
           .on('mouseover', function(event) {
             showTooltip(event, countryData.country, d);
@@ -165,7 +178,7 @@
       if (i > 0) {
         g.append('text')
           .attr('x', 8).attr('y', -r * radius + 4)
-          .attr('fill', '#888').attr('font-size', '10px').attr('font-weight', '500')
+          .attr('fill', '#888').attr('font-size', '9px').attr('font-weight', '500') // Menor
           .text(`${(r * 100).toFixed(0)}%`);
       }
     });
@@ -173,7 +186,7 @@
     g.append('text')
       .attr('x', 0).attr('y', 5)
       .attr('text-anchor', 'middle').attr('fill', '#666')
-      .attr('font-size', '11px').attr('font-weight', 'bold')
+      .attr('font-size', '10px').attr('font-weight', 'bold') // Menor
       .text('0%');
   }
   
@@ -213,10 +226,29 @@
       <strong>${indicator.label}</strong><br>
       Valor: ${indicator.rawValue.toFixed(2)} ${indicator.unit}<br>
       Posição relativa: ${percentValue}%${contextInfo}
-    `)
-    .style('left', (event.pageX + 15) + 'px')
-    .style('top', (event.pageY - 10) + 'px')
-    .transition().duration(200).style('opacity', 1);
+    `);
+    
+    // Posicionamento inteligente do tooltip
+    const tooltipRect = tooltip.node().getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    let left = event.pageX + 15;
+    let top = event.pageY - 10;
+    
+    // Ajustar se o tooltip sair da tela à direita
+    if (left + tooltipRect.width > windowWidth) {
+      left = event.pageX - tooltipRect.width - 15;
+    }
+    
+    // Ajustar se o tooltip sair da tela abaixo
+    if (top + tooltipRect.height > windowHeight) {
+      top = event.pageY - tooltipRect.height - 10;
+    }
+    
+    tooltip.style('left', left + 'px')
+           .style('top', top + 'px')
+           .transition().duration(200).style('opacity', 1);
     
     setTimeout(() => {
       tooltip.transition().duration(200).style('opacity', 0).remove();
@@ -292,11 +324,11 @@
   .radar-chart-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    padding: 15px;
+    gap: 10px; /* Menor espaçamento */
+    padding: 12px; /* Mais compacto */
     background: transparent;
     border-radius: 6px;
-    max-width: 950px;
+    max-width: 800px; /* Menor para caber na tela */
     margin: 0 auto;
   }
   
@@ -306,27 +338,27 @@
   
   .country-selector h4 {
     color: #ffd700;
-    margin: 0 0 10px 0;
-    font-size: 14px;
+    margin: 0 0 8px 0; /* Margem menor */
+    font-size: 13px; /* Fonte menor */
     font-weight: 600;
   }
   
   .country-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 6px;
-    max-width: 600px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Botões menores */
+    gap: 5px; /* Espaçamento menor */
+    max-width: 550px; /* Largura menor */
     margin: 0 auto;
   }
   
   .country-button {
-    padding: 5px 8px;
+    padding: 4px 6px; /* Mais compacto */
     background: transparent;
     border: 2px solid #666;
-    border-radius: 4px;
+    border-radius: 3px; /* Menor */
     color: #e0e0e0;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 9px; /* Fonte menor */
     font-weight: 500;
     transition: all 0.2s ease;
   }
@@ -345,7 +377,7 @@
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 20px;
+    gap: 15px; /* Espaçamento menor */
     justify-content: center;
   }
   
@@ -353,43 +385,43 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px; /* Menor espaçamento */
     flex-shrink: 0;
   }
   
-  .selected-countries {
+    .selected-countries {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
-    margin-top: 5px;
+    gap: 8px; /* Menor espaçamento */
+    margin-top: 4px; /* Margem menor */
   }
-  
+
   .country-item {
-    font-size: 11px;
+    font-size: 10px; /* Fonte menor */
     font-weight: 600;
   }
   
-  .legend {
+    .legend {
     flex: 1;
-    max-width: 280px;
-    min-width: 240px;
+    max-width: 250px; /* Menor */
+    min-width: 220px; /* Menor */
   }
-  
+
   .legend h4 {
     color: #ffd700;
-    margin: 0 0 8px 0;
-    font-size: 14px;
+    margin: 0 0 6px 0; /* Margem menor */
+    font-size: 13px; /* Fonte menor */
     text-align: left;
   }
   
   .normalization-note {
     background: rgba(255, 215, 0, 0.1);
     border: 1px solid #ffd700;
-    border-radius: 4px;
-    padding: 6px;
-    margin-bottom: 10px;
-    font-size: 10px;
+    border-radius: 3px; /* Menor */
+    padding: 5px; /* Mais compacto */
+    margin-bottom: 8px; /* Margem menor */
+    font-size: 9px; /* Fonte menor */
     color: #ffd700;
     line-height: 1.2;
   }
@@ -398,38 +430,43 @@
     color: #ffd700;
   }
   
-  .legend-items {
+    .legend-items {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px; /* Menor espaçamento */
   }
-  
+
   .legend-item {
-    padding: 6px;
+    padding: 5px; /* Mais compacto */
     background: rgba(255, 255, 255, 0.05);
     border-radius: 3px;
     border: 1px solid #444;
   }
   
-  .legend-label {
+    .legend-label {
     color: #ffd700;
     font-weight: bold;
-    font-size: 11px;
+    font-size: 10px; /* Menor */
     display: block;
-    margin-bottom: 2px;
+    margin-bottom: 1px; /* Margem menor */
   }
-  
+
   .legend-description {
     color: #c0c0c0;
-    font-size: 9px;
+    font-size: 8px; /* Menor */
     line-height: 1.2;
   }
   
-  @media (max-width: 900px) {
+  @media (max-width: 920px) { /* Ajustado para tela 918x857 */
+    .radar-chart-container {
+      padding: 10px; /* Mais compacto */
+      gap: 8px;
+    }
+    
     .chart-and-legend-wrapper {
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px; /* Menor espaçamento */
     }
     
     .legend {
@@ -444,26 +481,26 @@
   
   @media (max-width: 600px) {
     .radar-chart-container {
-      padding: 12px;
-      gap: 12px;
+      padding: 8px; /* Mais compacto */
+      gap: 6px; /* Menor */
     }
     
     .country-buttons {
-      grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-      gap: 5px;
+      grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); /* Botões menores */
+      gap: 4px; /* Menor espaçamento */
     }
     
     .country-button {
-      font-size: 9px;
-      padding: 4px 6px;
+      font-size: 8px; /* Fonte menor */
+      padding: 3px 5px; /* Mais compacto */
     }
     
     .chart-and-legend-wrapper {
-      gap: 10px;
+      gap: 8px; /* Menor espaçamento */
     }
     
     .legend-item {
-      padding: 5px;
+      padding: 4px; /* Mais compacto */
     }
   }
 </style> 

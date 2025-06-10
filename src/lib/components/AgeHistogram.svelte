@@ -288,13 +288,39 @@
 <div class="chart-wrapper">
   {#if industries.length > 0}
     <div class="controls-panel">
-      <div class="control-group">
-        <label for="industry-select">Filtro por Indústria:</label>
-        <select id="industry-select" bind:value={selectedIndustry}>
-          {#each industries as industry}
-            <option value={industry}>{industry}</option>
+      <div class="industry-slicer">
+        <h4 class="slicer-title">Filtrar por Indústria</h4>
+        <div class="industry-grid">
+          {#each industries.slice(0, 8) as industry}
+            <button 
+              class="industry-chip {selectedIndustry === industry ? 'active' : ''}"
+              on:click={() => selectedIndustry = industry}
+            >
+              {industry}
+              {#if selectedIndustry === industry}
+                <span class="check-mark">✓</span>
+              {/if}
+            </button>
           {/each}
-        </select>
+          {#if industries.length > 8}
+            <details class="more-industries">
+              <summary class="more-toggle">Mais +{industries.length - 8}</summary>
+              <div class="more-industry-grid">
+                {#each industries.slice(8) as industry}
+                  <button 
+                    class="industry-chip {selectedIndustry === industry ? 'active' : ''}"
+                    on:click={() => selectedIndustry = industry}
+                  >
+                    {industry}
+                    {#if selectedIndustry === industry}
+                      <span class="check-mark">✓</span>
+                    {/if}
+                  </button>
+                {/each}
+              </div>
+            </details>
+          {/if}
+        </div>
       </div>
       <div class="filter-info">
         <span class="total-count">Total: {totalBillionaires} bilionários</span>
@@ -323,44 +349,109 @@
   .controls-panel {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     gap: 20px;
-    padding: 15px 20px;
+    padding: 20px;
     background: #2a2a2a;
-    border-radius: 8px;
+    border-radius: 12px;
     margin-bottom: 20px;
     border: 1px solid #444;
     flex-wrap: wrap;
   }
 
-  .control-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .industry-slicer {
+    flex: 1;
+    min-width: 300px;
   }
 
-  .control-group label {
-    font-size: 14px;
+  .slicer-title {
     color: #e0e0e0;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .industry-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .industry-chip {
+    padding: 8px 14px;
+    background: #1a1a1a;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
     font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     white-space: nowrap;
   }
 
-  select {
-    padding: 8px 12px;
-    border: 1px solid #555;
-    border-radius: 4px;
-    background: #1a1a1a;
-    color: #e0e0e0;
-    font-size: 14px;
-    min-width: 180px;
-    cursor: pointer;
+  .industry-chip:hover {
+    background: #333;
+    border-color: #6366f1;
+    transform: translateY(-1px);
   }
 
-  select:focus {
-    outline: none;
+  .industry-chip.active {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
     border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  }
+
+  .check-mark {
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  .more-industries {
+    position: relative;
+  }
+
+  .more-toggle {
+    padding: 8px 14px;
+    background: #444;
+    color: #e0e0e0;
+    border: 1px solid #666;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    list-style: none;
+    transition: all 0.2s ease;
+  }
+
+  .more-toggle:hover {
+    background: #555;
+    border-color: #6366f1;
+  }
+
+  .more-industry-grid {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 200px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin-top: 4px;
   }
 
   .filter-info {
