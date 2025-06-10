@@ -206,7 +206,9 @@
 	// Carregar dados do mundo
 	onMount(async () => {
 		try {
-			const response = await fetch('/countries.geojson');
+			// Importar base path do SvelteKit
+			const { base } = await import('$app/paths');
+			const response = await fetch(`${base}/countries.geojson`);
 			worldData = await response.json();
 		} catch (error) {
 			console.error('Erro ao carregar dados do mundo:', error);
