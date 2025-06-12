@@ -1113,14 +1113,14 @@
 	}
 
 	.control-toggle input:checked + .toggle-switch.emigration {
-		background: #00bfa5;
-		border-color: #00bfa5;
+		border-color: #4B0082;
+		background: #4B0082;
 		box-shadow: 0 0 8px rgba(0, 191, 165, 0.5);
 	}
 
 	.control-toggle input:checked + .toggle-switch.immigration {
-		background: #2196f3;
-		border-color: #2196f3;
+		border-color: #FF00FF;
+		background: #FF00FF;
 		box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
 	}
 
