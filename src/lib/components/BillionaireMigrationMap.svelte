@@ -1104,12 +1104,12 @@
 
 	.toggle-switch.emigration {
 		border-color: #4B0082;
-		background: rgba(0, 191, 165, 0.3);
+		background: #4B0082;
 	}
 
 	.toggle-switch.immigration {
 		border-color: #FF00FF;
-		background: rgba(33, 150, 243, 0.3);
+		background: #FF00FF;
 	}
 
 	.control-toggle input:checked + .toggle-switch.emigration {
