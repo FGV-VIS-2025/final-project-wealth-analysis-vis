@@ -253,21 +253,16 @@
   </section>
 
   <!-- Seção do Mapa de Migração de Bilionários -->
-  <section class="story-section side-by-side map-section-redesigned">
-    <div class="content-third left map-text-content">
+  <section class="story-section full-width map-section-redesigned">
+    <div class="map-text-content-top">
       <h2>Fluxos Migratórios da Elite Global</h2>
       <p>
-        <strong>Conectando com as análises anteriores:</strong> Após observarmos as concentrações de bilionários por país e as disparidades de gênero, surge uma questão fundamental: <em>para onde estão indo esses bilionários?</em>
-      </p>
-      <p>
-        Esta visualização interativa revela os padrões migratórios da elite financeira global. Países como Brasil, Canadá e Suécia registram significativa saída de bilionários, enquanto destinos como Estados Unidos, Singapura e Suíça atraem essa população. 
-      </p>
-      <p>
-        <strong>Use a interatividade:</strong> Clique nos países do mapa para focar nos fluxos específicos e descobrir os padrões únicos de cada região.
+        <strong>Para onde estão indo os bilionários?</strong> Esta visualização revela os padrões migratórios da elite financeira global.
+        <strong>Como usar:</strong> Clique nos países para ver fluxos específicos de emigração e imigração.
       </p>
     </div>
     
-    <div class="content-two-thirds right map-container-wrapper">
+    <div class="map-container-wrapper-full">
       {#if !isLoading && allData.length > 0}
         <BillionaireMigrationMap data={allData} />
       {:else if isLoading}
@@ -353,75 +348,58 @@
 </div>
 
 <style>
-  .content-third {
-    flex: 1;
-    max-width: 30%;
+  .map-section-redesigned {
+    min-height: 800px;
     padding: 2rem;
   }
 
-  .content-two-thirds {
-    flex: 2;
-    max-width: 70%;
-    padding: 1rem;
-  }
-
-  .map-section-redesigned {
-    align-items: flex-start;
-    gap: 2rem;
-    min-height: 800px;
-  }
-
-  .map-container-wrapper {
+  .map-container-wrapper-full {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    overflow-x: auto;
+    margin-top: 1rem;
   }
 
-  .map-text-content {
-    position: sticky;
-    top: 2rem;
-  }
-
-  .map-text-content h2 {
-    color: #ffd700;
-    font-size: 24px;
-    font-weight: 600;
+  .map-text-content-top {
+    text-align: center;
     margin-bottom: 1.5rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .map-text-content p {
-    color: #e2e8f0;
-    line-height: 1.7;
-    margin-bottom: 1.2rem;
-    font-size: 16px;
-  }
-
-  .map-text-content strong {
+  .map-text-content-top h2 {
     color: #ffd700;
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 1rem;
   }
 
-  .map-text-content em {
-    color: #a0aec0;
-    font-style: italic;
+  .map-text-content-top p {
+    color: #e2e8f0;
+    line-height: 1.6;
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .map-text-content-top strong {
+    color: #ffd700;
+    margin-right: 0.5rem;
   }
 
   @media (max-width: 1024px) {
-    .content-third,
-    .content-two-thirds {
-      max-width: 100%;
-      flex: 1;
-    }
-
     .map-section-redesigned {
-      flex-direction: column;
+      padding: 1rem;
       min-height: auto;
     }
 
-    .map-text-content {
-      position: static;
-      text-align: center;
+    .map-text-content-top h2 {
+      font-size: 24px;
+    }
+
+    .map-text-content-top p {
+      font-size: 14px;
     }
   }
 </style>

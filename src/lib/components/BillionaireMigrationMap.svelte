@@ -6,9 +6,7 @@
 	export let selectedIndustries = [];
 	export let selectedGender = 'Todos';
   
-  // Filtros locais
   let filterIndustry = 'all';
-  
   let svgElement;
 	let worldData = null;
 	let filteredData = [];
@@ -16,12 +14,8 @@
   let selectedCountry = null;
 	let tooltip = { show: false, x: 0, y: 0, content: '' };
 	let countryCoordinates = new Map();
-	
-	// Controles para filtrar fluxos
 	let showEmigration = true;
 	let showImmigration = true;
-
-	// Mapeamento de nomes de países (dados → GeoJSON)
 	const countryNameMap = {
 		'United States': 'United States of America',
 		'United Kingdom': 'United Kingdom',
@@ -187,26 +181,21 @@
 		'Saint Kitts and Nevis': 'Saint Kitts and Nevis'
 	};
 
-	// Cores por continente harmonizadas com o radar chart
-  const continentColors = {
-		'North America': '#45b7d1',    // Azul claro (do radar)
-		'South America': '#f39c12',    // Laranja dourado (do radar)
-		'Europe': '#2ecc71',           // Verde (do radar)
-		'Asia': '#e74c3c',            // Vermelho (do radar)
-		'Africa': '#9b59b6',          // Roxo (do radar)
-		'Oceania': '#a0522d',         // Marrom
-		// Oriente Médio removido
+	// Paleta clássica de continentes (mais próxima de mapas educativos)
+	const continentColors = {
+		'North America': '#4fa3ff',  // azul claro
+		'South America': '#ff9e29',  // laranja
+		'Europe':        '#4cd964',  // verde
+		'Asia':          '#ff4d4d',  // vermelho
+		'Africa':        '#ffcc00',  // amarelo/dourado
+		'Oceania':       '#cd853f'   // marrom
 	};
 
-	// Extrair indústrias dos dados
 	$: uniqueIndustries = data && data.length > 0 
 		? ['all', ...new Set(data.map(d => d.industries).filter(Boolean)).values()].sort()
 		: ['all'];
-
-	// Carregar dados do mundo
 	onMount(async () => {
 		try {
-			// Importar base path do SvelteKit
 			const { base } = await import('$app/paths');
 			const response = await fetch(`${base}/countries.geojson`);
 			worldData = await response.json();
@@ -214,17 +203,12 @@
 			console.error('Erro ao carregar dados do mundo:', error);
 		}
 	});
-
-	// Filtrar dados
 	$: {
 		if (data && data.length > 0) {
 			filteredData = data.filter(d => {
-				// Filtro local por indústria
 				const localIndustryMatch = filterIndustry === 'all' || d.industries === filterIndustry;
-				// Se selectedIndustries está vazio, incluir todos
 				const industryMatch = !selectedIndustries || selectedIndustries.length === 0 || 
 					selectedIndustries.includes(d.industries);
-				// Se selectedGender não está definido ou é 'Todos', incluir todos
 				const genderMatch = !selectedGender || selectedGender === 'Todos' || 
 					d.gender === selectedGender;
 				return localIndustryMatch && industryMatch && genderMatch && d.country && 
@@ -233,15 +217,8 @@
 		} else {
 			filteredData = [];
 		}
-		
-
 	}
 
-	// Calcular migração (cidadania → residência)
-	// LÓGICA:
-	// - countryOfCitizenship = país de nascimento/cidadania (ORIGEM)
-	// - country = país atual de residência (DESTINO)
-	// - Se diferentes = houve migração de origem → destino
 	$: {
 		if (filteredData && filteredData.length > 0) {
 			const migrationCounts = new Map();
@@ -260,13 +237,9 @@
 				.filter(([, count]) => count >= 1)
 				.map(([key, count]) => {
 					const [origin, destination] = key.split('-');
-					return { 
-						origin,          // País de cidadania (saiu daqui)
-						destination,     // País atual (chegou aqui)
-						count 
-					};
+					return { origin, destination, count };
 				})
-				.sort((a, b) => b.count - a.count); // Ordenar por volume
+				.sort((a, b) => b.count - a.count);
 		} else {
 			migrationFlows = [];
 		}
@@ -359,13 +332,13 @@
 		const svg = d3.select(svgElement);
 		svg.selectAll('*').remove();
 
-		// Dimensões otimizadas para tela 918x857
-		const width = 750; // Reduzido para caber melhor
-		const height = 400; // Mantém proporção adequada
+		// Dimensões otimizadas para aproveitar melhor a tela 1512x857
+		const width = 1300; // Maior para aproveitar a largura da tela
+		const height = 650; // Altura proporcional para aproveitar a tela
 
-		// Projeção do mapa
+		// Projeção do mapa com escala maior
 		const projection = d3.geoNaturalEarth1()
-			.scale(115) // Ajustado proporcionalmente
+			.scale(200) // Escala maior para mapa mais detalhado
 			.translate([width / 2, height / 2]);
 
 		const path = d3.geoPath().projection(projection);
@@ -397,11 +370,11 @@
 		// Grupo principal
 		const g = svg.append('g');
 
-		// Fundo do oceano harmonizado
+		// Fundo limpo
 		g.append('rect')
 			.attr('width', width)
 			.attr('height', height)
-			.attr('fill', '#1a1a2e')
+			.attr('fill', 'transparent')
 			.attr('stroke', 'none');
 
 		// Renderizar países
@@ -429,7 +402,7 @@
 					}
 				}
 				
-				if (billionaireCount === 0) return '#34495e';
+				if (billionaireCount === 0) return '#1a1a1a';
 				
 				const baseColor = continentColors[continent] || '#666666';
 				
@@ -437,7 +410,7 @@
 				const intensity = Math.min(billionaireCount / 10, 1);
 				return d3.color(baseColor).brighter(0.3 - intensity * 0.3);
 			})
-			.attr('stroke', '#2c3e50')
+			.attr('stroke', '#333333')
 			.attr('stroke-width', 0.8)
 			.style('cursor', 'pointer')
 			.on('click', function(event, d) {
@@ -476,7 +449,7 @@
 								break;
 							}
 						}
-						return matchedCountry ? '#ffffff' : '#2c3e50';
+						return matchedCountry ? '#000000' : '#333333';
 					})
 					.attr('stroke-width', function(d) {
 						const geoName = d.properties.NAME || d.properties.name;
@@ -492,7 +465,7 @@
 
 				// Highlight do país atual
 				d3.select(this)
-					.attr('stroke', '#ffffff')
+					.attr('stroke', '#000000')
 					.attr('stroke-width', 1);
 
 				// Tooltip mais clean
@@ -528,12 +501,12 @@
 				// Só resetar estilo se não for o país selecionado
 				if (selectedCountry !== matchedCountry) {
 					d3.select(this)
-						.attr('stroke', '#2c3e50')
+						.attr('stroke', '#333333')
 						.attr('stroke-width', 0.8);
 				} else {
 					// Manter highlight do país selecionado
 					d3.select(this)
-						.attr('stroke', '#ffffff')
+						.attr('stroke', '#000000')
 						.attr('stroke-width', 2);
 				}
 				// Garantir que o tooltip desapareça sempre
@@ -550,7 +523,7 @@
 	function updateCountryHighlights(g, countryCounts) {
 		// Resetar todos os países para o estilo padrão
 		g.selectAll('.country')
-			.attr('stroke', '#2c3e50')
+			.attr('stroke', '#333333')
 			.attr('stroke-width', 0.8);
 
 		// Highlight do país selecionado, se houver
@@ -565,8 +538,8 @@
 					}
 					return false;
 				})
-				.attr('stroke', '#ffffff')
-				.attr('stroke-width', 4);
+				.attr('stroke', '#000000')
+				.attr('stroke-width', 3);
 		}
 	}
 
@@ -608,10 +581,10 @@
 		}
 		
 		// Usar a mesma projeção do mapa principal - ajustada
-		const width = 750;
-		const height = 400;
+		const width = 1300;
+		const height = 650;
 		const projection = d3.geoNaturalEarth1()
-			.scale(115)
+			.scale(200)
 			.translate([width / 2, height / 2]);
 
 		// Filtrar fluxos do país selecionado com base nos controles
@@ -628,8 +601,6 @@
 			
 			return isEmigration || isImmigration;
 		});
-
-
 
 
 
@@ -918,7 +889,7 @@
 	</div>
     
 	<div class="map-wrapper">
-		<svg bind:this={svgElement} width="750" height="400"></svg>
+		<svg bind:this={svgElement} width="1300" height="650"></svg>
 		
 		{#if tooltip.show}
 			<div 
@@ -932,38 +903,20 @@
 
 	<!-- Legenda de cores dos continentes centralizada -->
 	<div class="continent-legend legend-centered">
-		<div><span class="legend-color" style="background:#45b7d1"></span> América do Norte</div>
-		<div><span class="legend-color" style="background:#f39c12"></span> América do Sul</div>
-		<div><span class="legend-color" style="background:#2ecc71"></span> Europa</div>
-		<div><span class="legend-color" style="background:#e74c3c"></span> Ásia</div>
-		<div><span class="legend-color" style="background:#9b59b6"></span> África</div>
-		<div><span class="legend-color" style="background:#a0522d"></span> Oceania</div>
+		<div><span class="legend-color" style="background:#4fa3ff"></span> América do Norte</div>
+		<div><span class="legend-color" style="background:#ff9e29"></span> América do Sul</div>
+		<div><span class="legend-color" style="background:#4cd964"></span> Europa</div>
+		<div><span class="legend-color" style="background:#ff4d4d"></span> Ásia</div>
+		<div><span class="legend-color" style="background:#ffcc00"></span> África</div>
+		<div><span class="legend-color" style="background:#cd853f"></span> Oceania</div>
 	</div>
-
-	{#if selectedCountry}
-		<div class="selection-info">
-			<p>País selecionado: <strong>{selectedCountry}</strong></p>
-			<p><small>
-				<strong>Dourado (Emigração):</strong> bilionários que <u>saíram</u> de {selectedCountry} • 
-				<strong>Coral (Imigração):</strong> bilionários que <u>chegaram</u> em {selectedCountry}
-			</small></p>
-			<p><small>
-				Base: país de cidadania → país de residência atual • Use os controles para filtrar tipos de fluxo
-			</small></p>
-		</div>
-	{/if}
 </div>
 
 <style>
 	.migration-map-container {
-		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f1419 100%);
-		border-radius: 10px; /* Mais compacto */
-		padding: 16px; /* Mais compacto */
-		margin: 12px 0; /* Mais compacto */
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-		border: 1px solid rgba(255, 215, 0, 0.2);
-		max-width: 800px; /* Limitar largura máxima */
-		margin: 12px auto; /* Centralizar */
+		padding: 16px;
+		margin: 12px auto;
+		max-width: 1350px;
 	}
 
 	.map-header {
@@ -995,26 +948,20 @@
 		position: relative;
 		display: flex;
 		justify-content: center;
-		background: linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%);
-		border-radius: 6px; /* Mais compacto */
-		padding: 8px; /* Mais compacto */
-		border: 1px solid rgba(255, 215, 0, 0.3); /* Borda mais sutil */
 		width: 100%;
 		overflow-x: auto;
-		box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2); /* Sombra mais sutil */
 	}
 
 	.tooltip {
 		position: absolute;
 		background: rgba(15, 23, 42, 0.95);
 		color: white;
-		padding: 8px 12px; /* Mais compacto */
-		border-radius: 6px; /* Mais clean */
-		font-size: 11px; /* Menor */
+		padding: 8px 12px;
+		border-radius: 6px;
+		font-size: 11px;
 		font-weight: 500;
 		pointer-events: none;
 		z-index: 1000;
-		border: 1px solid rgba(255, 215, 0, 0.5);
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 		backdrop-filter: blur(8px);
 		max-width: 200px;
@@ -1025,12 +972,7 @@
 
 
 	.selection-info {
-		text-align: center;
-		margin-top: 8px; /* Mais compacto */
-		padding: 6px 12px; /* Mais compacto */
-		background: rgba(255, 215, 0, 0.1); /* Mais sutil */
-		border-radius: 4px; /* Mais compacto */
-		border: 1px solid rgba(255, 215, 0, 0.25); /* Mais sutil */
+		display: none;
 	}
 
 	.selection-info p {
@@ -1095,8 +1037,8 @@
 		box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
 	}
 
-	/* Responsividade otimizada para 918x857 */
-	@media (max-width: 920px) {
+	/* Responsividade otimizada para telas menores */
+	@media (max-width: 1400px) {
 		.migration-map-container {
 			max-width: 100%;
 			padding: 12px;
@@ -1107,11 +1049,11 @@
 		}
 		
 		.map-wrapper svg {
-			min-width: 750px;
+			min-width: 1300px;
 		}
 		
 		.map-header h3 {
-			font-size: 16px;
+			font-size: 20px;
 		}
 
 		.controls-container {
