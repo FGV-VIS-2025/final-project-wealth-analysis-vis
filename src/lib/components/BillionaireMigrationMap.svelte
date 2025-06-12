@@ -465,30 +465,52 @@
 				}
 			})
 			.on('mouseover', function(event, d) {
-				const geoName = d.properties.NAME || d.properties.name;
-				
-				// Encontrar correspondência nos dados
-				let billionaireCount = 0;
-				for (let [dataCountry, count] of countryCounts.entries()) {
-					const normalizedDataCountry = normalizeCountryName(dataCountry);
-					if (isCountryMatch(geoName, dataCountry)) {
-						billionaireCount = count;
-						break;
-					}
-				}
-				
-				// Highlight do país
+				// Remover highlight de todos os países, exceto o selecionado
+				g.selectAll('.country')
+					.attr('stroke', function(d) {
+						const geoName = d.properties.NAME || d.properties.name;
+						let matchedCountry = null;
+						for (let dataCountry of countryCounts.keys()) {
+							if (isCountryMatch(geoName, dataCountry) && dataCountry === selectedCountry) {
+								matchedCountry = dataCountry;
+								break;
+							}
+						}
+						return matchedCountry ? '#ffd700' : '#2c3e50';
+					})
+					.attr('stroke-width', function(d) {
+						const geoName = d.properties.NAME || d.properties.name;
+						let matchedCountry = null;
+						for (let dataCountry of countryCounts.keys()) {
+							if (isCountryMatch(geoName, dataCountry) && dataCountry === selectedCountry) {
+								matchedCountry = dataCountry;
+								break;
+							}
+						}
+						return matchedCountry ? 2 : 0.8;
+					});
+
+				// Highlight do país atual
 				d3.select(this)
 					.attr('stroke', '#ffd700')
 					.attr('stroke-width', 2);
 
 				// Tooltip mais clean
+				const geoNameHover = d.properties.NAME || d.properties.name;
+				let billionaireCount = 0;
+				for (let [dataCountry, count] of countryCounts.entries()) {
+					const normalizedDataCountry = normalizeCountryName(dataCountry);
+					if (isCountryMatch(geoNameHover, dataCountry)) {
+						billionaireCount = count;
+						break;
+					}
+				}
 				if (billionaireCount > 0) {
 					tooltip = {
 						show: true,
 						x: event.offsetX + 10,
 						y: event.offsetY - 10,
-						content: `${geoName}<br/><span style="color: #ffd700; font-weight: bold;">${billionaireCount}</span> bilionários`
+						content: `${geoNameHover}<br/><span style=\"color: #ffd700; font-weight: bold;\">${billionaireCount}</span> bilionários`
 					};
 				}
 			})
