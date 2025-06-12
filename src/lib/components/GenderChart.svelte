@@ -240,13 +240,17 @@
       .attr('fill', d => d.config.color)
       .attr('stroke', 'rgba(255,255,255,0.3)')
       .attr('stroke-width', 2)
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'none');
 
     bars.transition()
       .duration(800)
       .delay((d, i) => i * 150)
       .attr('y', d => y(d.count))
-      .attr('height', d => innerHeight - y(d.count));
+      .attr('height', d => innerHeight - y(d.count))
+      .on('end', function() {
+        d3.select(this).style('pointer-events', 'auto');
+      });
 
     const labels = svg.selectAll('.value-label')
       .data(data)
@@ -287,22 +291,28 @@
 
     bars
       .on('mouseover', function(event, d) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 0.8)
-          .attr('stroke-width', 3);
-        
-        showTooltip(event, d, false);
+        // Verificar se há transição em andamento
+        const bar = d3.select(this);
+        if (!bar.transition().active()) {
+          bar.transition()
+            .duration(200)
+            .attr('opacity', 0.8)
+            .attr('stroke-width', 3);
+          
+          showTooltip(event, d, false);
+        }
       })
       .on('mouseout', function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 1)
-          .attr('stroke-width', 2);
-        
-        hideTooltip();
+        // Verificar se há transição em andamento
+        const bar = d3.select(this);
+        if (!bar.transition().active()) {
+          bar.transition()
+            .duration(200)
+            .attr('opacity', 1)
+            .attr('stroke-width', 2);
+          
+          hideTooltip();
+        }
       })
       .on('mousemove', function(event) {
         updateTooltipPosition(event);
@@ -364,12 +374,16 @@
       .attr('fill', genderColor)
       .attr('stroke', 'rgba(255,255,255,0.3)')
       .attr('stroke-width', 1)
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'none');
 
     bars.transition()
       .duration(800)
       .delay((d, i) => i * 40)
-      .attr('width', d => x(parseFloat(d.percentage)));
+      .attr('width', d => x(parseFloat(d.percentage)))
+      .on('end', function() {
+        d3.select(this).style('pointer-events', 'auto');
+      });
 
     const labels = svg.selectAll('.breakdown-label')
       .data(data)
@@ -392,20 +406,26 @@
 
     bars
       .on('mouseover', function(event, d) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 0.8);
-        
-        showTooltip(event, d, true);
+        // Verificar se há transição em andamento
+        const bar = d3.select(this);
+        if (!bar.transition().active()) {
+          bar.transition()
+            .duration(200)
+            .attr('opacity', 0.8);
+          
+          showTooltip(event, d, true);
+        }
       })
       .on('mouseout', function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 1);
-        
-        hideTooltip();
+        // Verificar se há transição em andamento
+        const bar = d3.select(this);
+        if (!bar.transition().active()) {
+          bar.transition()
+            .duration(200)
+            .attr('opacity', 1);
+          
+          hideTooltip();
+        }
       })
       .on('mousemove', function(event) {
         updateTooltipPosition(event);
@@ -460,13 +480,17 @@
       .attr('stroke', 'rgba(255,255,255,0.3)')
       .attr('stroke-width', 2)
       .attr('rx', 6).attr('ry', 6)
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'none');
 
     bars.transition()
       .duration(800)
       .delay((d, i) => i * 200)
       .attr('y', d => y(d.count))
-      .attr('height', d => innerHeight - y(d.count));
+      .attr('height', d => innerHeight - y(d.count))
+      .on('end', function() {
+        d3.select(this).style('pointer-events', 'auto');
+      });
 
     const labels = svg.selectAll('.selfmade-label')
       .data(data)
@@ -508,22 +532,27 @@
 
     bars
       .on('mouseover', function(event, d) {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 0.8)
-          .attr('stroke-width', 3);
-        
-        showTooltip(event, d, false, true);
+        // Verificar se há transição em andamento
+        const bar = d3.select(this);
+        if (!bar.transition().active()) {
+          bar.transition()
+            .duration(200)
+            .attr('opacity', 0.8)
+            .attr('stroke-width', 3);
+          
+          showTooltip(event, d, false, true);
+        }
       })
       .on('mouseout', function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr('opacity', 1)
-          .attr('stroke-width', 2);
-        
-        hideTooltip();
+        const bar = d3.select(this);
+        if (!bar.transition().active()) {
+          bar.transition()
+            .duration(200)
+            .attr('opacity', 1)
+            .attr('stroke-width', 2);
+          
+          hideTooltip();
+        }
       })
       .on('mousemove', function(event) {
         updateTooltipPosition(event);

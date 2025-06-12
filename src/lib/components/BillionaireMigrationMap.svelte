@@ -182,13 +182,13 @@
 	};
 
 	// Paleta clássica de continentes (mais próxima de mapas educativos)
-	const continentColors = {
-		'North America': '#4fa3ff',  // azul claro
-		'South America': '#ff9e29',  // laranja
-		'Europe':        '#4cd964',  // verde
-		'Asia':          '#ff4d4d',  // vermelho
-		'Africa':        '#ffcc00',  // amarelo/dourado
-		'Oceania':       '#cd853f'   // marrom
+  const continentColors = {
+		'North America': '#2e7d32',  // verde escuro
+		'South America': '#ffa726',  // laranja
+		'Europe':        '#42a5f5',  // azul claro
+		'Asia':          '#ef5350',  // vermelho
+		'Africa':        '#ffd700',  // amarelo/dourado
+		'Oceania':       '#8d6e63'   // marrom
 	};
 
 	$: uniqueIndustries = data && data.length > 0 
@@ -655,7 +655,7 @@
 
 				// Determinar cor e largura baseado no fluxo e volume
 				const isOutgoing = flow.origin === selectedCountry;
-				const baseColor = isOutgoing ? '#ffd700' : '#ff6b6b'; // Dourado (emigração) e coral (imigração) do radar
+				const baseColor = isOutgoing ? '#00bfa5' : '#2196f3'; // Verde-água (emigração) e azul (imigração)
 				const strokeWidth = Math.max(2, Math.min(8, Math.sqrt(flow.count) * 2));
 				
 				// Criar gradiente único para cada fluxo
@@ -812,7 +812,7 @@
 		});
 
 		// Criar marcadores de seta melhorados - menores
-		// Seta para emigração (dourada)
+		// Seta para emigração (verde-água)
 		const arrowOut = defs.append('marker')
 			.attr('id', 'arrowhead-out')
 			.attr('viewBox', '0 -5 8 10') // Reduzido
@@ -824,11 +824,11 @@
 		
 		arrowOut.append('path')
 			.attr('d', 'M0,-3L6,0L0,3L1,0Z') // Ajustado
-			.attr('fill', '#ffd700')
+			.attr('fill', '#00bfa5')
 			.attr('stroke', '#2c3e50')
 			.attr('stroke-width', 0.5);
 		
-		// Seta para imigração (coral)
+		// Seta para imigração (azul)
 		const arrowIn = defs.append('marker')
 			.attr('id', 'arrowhead-in')
 			.attr('viewBox', '0 -5 8 10') // Reduzido
@@ -840,7 +840,7 @@
 		
 		arrowIn.append('path')
 			.attr('d', 'M0,-3L6,0L0,3L1,0Z') // Ajustado
-			.attr('fill', '#ff6b6b')
+			.attr('fill', '#2196f3')
 			.attr('stroke', '#2c3e50')
 			.attr('stroke-width', 0.5);
 	}
@@ -903,12 +903,12 @@
 
 	<!-- Legenda de cores dos continentes centralizada -->
 	<div class="continent-legend legend-centered">
-		<div><span class="legend-color" style="background:#4fa3ff"></span> América do Norte</div>
-		<div><span class="legend-color" style="background:#ff9e29"></span> América do Sul</div>
-		<div><span class="legend-color" style="background:#4cd964"></span> Europa</div>
-		<div><span class="legend-color" style="background:#ff4d4d"></span> Ásia</div>
-		<div><span class="legend-color" style="background:#ffcc00"></span> África</div>
-		<div><span class="legend-color" style="background:#cd853f"></span> Oceania</div>
+		<div><span class="legend-color" style="background:#2e7d32"></span> América do Norte</div>
+		<div><span class="legend-color" style="background:#ffa726"></span> América do Sul</div>
+		<div><span class="legend-color" style="background:#42a5f5"></span> Europa</div>
+		<div><span class="legend-color" style="background:#ef5350"></span> Ásia</div>
+		<div><span class="legend-color" style="background:#ffd700"></span> África</div>
+		<div><span class="legend-color" style="background:#8d6e63"></span> Oceania</div>
 	</div>
 </div>
 
@@ -1103,25 +1103,25 @@
 	}
 
 	.toggle-switch.emigration {
-		border-color: #ffd700;
-		background: rgba(255, 215, 0, 0.3);
+		border-color: #00bfa5;
+		background: rgba(0, 191, 165, 0.3);
 	}
 
 	.toggle-switch.immigration {
-		border-color: #ff6b6b;
-		background: rgba(255, 107, 107, 0.3);
+		border-color: #2196f3;
+		background: rgba(33, 150, 243, 0.3);
 	}
 
 	.control-toggle input:checked + .toggle-switch.emigration {
-		background: #ffd700;
-		border-color: #ffd700;
-		box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+		background: #00bfa5;
+		border-color: #00bfa5;
+		box-shadow: 0 0 8px rgba(0, 191, 165, 0.5);
 	}
 
 	.control-toggle input:checked + .toggle-switch.immigration {
-		background: #ff6b6b;
-		border-color: #ff6b6b;
-		box-shadow: 0 0 8px rgba(255, 107, 107, 0.5);
+		background: #2196f3;
+		border-color: #2196f3;
+		box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
 	}
 
 	.toggle-switch::before {

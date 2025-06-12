@@ -178,18 +178,22 @@
       .attr('x', 0)
       .attr('height', y.bandwidth())
       .attr('width', 0)
-      .attr('fill', d => `url(#gradient-${d.region.replace(/\s+/g, '-')})`)
+      .attr('fill', d => `url(#gradient-${d.region.replace(/\s+/g, '-')}` + ")")
       .attr('stroke', 'rgba(255,255,255,0.2)')
       .attr('stroke-width', 0.5)
       .attr('rx', 4)
       .attr('ry', 4)
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'none');
 
     // Animar as barras
     bars.transition()
       .duration(800)
       .delay((d, i) => i * 40)
-      .attr('width', d => x(d.count));
+      .attr('width', d => x(d.count))
+      .on('end', function() {
+        d3.select(this).style('pointer-events', 'auto');
+      });
 
     // Criar labels das barras - fonte menor
     const labels = chartGroup.selectAll('.bar-label')
