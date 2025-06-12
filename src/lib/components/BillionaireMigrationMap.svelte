@@ -194,8 +194,8 @@
 		'Europe': '#2ecc71',           // Verde (do radar)
 		'Asia': '#e74c3c',            // Vermelho (do radar)
 		'Africa': '#9b59b6',          // Roxo (do radar)
-		'Oceania': '#d35400',         // Laranja escuro
-		'Middle East': '#4ecdc4'      // Turquesa (do radar)
+		'Oceania': '#a0522d',         // Marrom
+		// Oriente Médio removido
 	};
 
 	// Extrair indústrias dos dados
@@ -930,6 +930,16 @@
 		{/if}
 	</div>
 
+	<!-- Legenda de cores dos continentes centralizada -->
+	<div class="continent-legend legend-centered">
+		<div><span class="legend-color" style="background:#45b7d1"></span> América do Norte</div>
+		<div><span class="legend-color" style="background:#f39c12"></span> América do Sul</div>
+		<div><span class="legend-color" style="background:#2ecc71"></span> Europa</div>
+		<div><span class="legend-color" style="background:#e74c3c"></span> Ásia</div>
+		<div><span class="legend-color" style="background:#9b59b6"></span> África</div>
+		<div><span class="legend-color" style="background:#a0522d"></span> Oceania</div>
+	</div>
+
 	{#if selectedCountry}
 		<div class="selection-info">
 			<p>País selecionado: <strong>{selectedCountry}</strong></p>
@@ -1187,5 +1197,31 @@
 
 	.control-toggle input:checked + .toggle-switch::before {
 		transform: translateX(14px); /* Ajustado de 16px */
+	}
+
+	.continent-legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 18px 32px;
+		margin: 18px 0 0 0;
+		font-size: 14px;
+		color: #e0e0e0;
+		align-items: center;
+	}
+	.legend-color {
+		display: inline-block;
+		width: 18px;
+		height: 18px;
+		border-radius: 4px;
+		margin-right: 8px;
+		border: 2px solid #232323;
+		vertical-align: middle;
+	}
+
+	.legend-centered {
+		justify-content: center;
+		margin-top: 18px;
+		margin-bottom: 0;
+		width: 100%;
 	}
 </style> 
