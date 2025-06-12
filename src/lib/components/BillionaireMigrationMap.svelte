@@ -476,7 +476,7 @@
 								break;
 							}
 						}
-						return matchedCountry ? '#ffd700' : '#2c3e50';
+						return matchedCountry ? '#ffffff' : '#2c3e50';
 					})
 					.attr('stroke-width', function(d) {
 						const geoName = d.properties.NAME || d.properties.name;
@@ -492,8 +492,8 @@
 
 				// Highlight do país atual
 				d3.select(this)
-					.attr('stroke', '#ffd700')
-					.attr('stroke-width', 2);
+					.attr('stroke', '#ffffff')
+					.attr('stroke-width', 1);
 
 				// Tooltip mais clean
 				const geoNameHover = d.properties.NAME || d.properties.name;
@@ -533,7 +533,7 @@
 				} else {
 					// Manter highlight do país selecionado
 					d3.select(this)
-						.attr('stroke', '#ffd700')
+						.attr('stroke', '#ffffff')
 						.attr('stroke-width', 2);
 				}
 				// Garantir que o tooltip desapareça sempre
@@ -565,8 +565,8 @@
 					}
 					return false;
 				})
-				.attr('stroke', '#ffd700')
-				.attr('stroke-width', 2);
+				.attr('stroke', '#ffffff')
+				.attr('stroke-width', 4);
 		}
 	}
 
