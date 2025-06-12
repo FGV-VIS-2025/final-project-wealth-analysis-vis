@@ -655,7 +655,7 @@
 
 				// Determinar cor e largura baseado no fluxo e volume
 				const isOutgoing = flow.origin === selectedCountry;
-				const baseColor = isOutgoing ? '#483D8B' : '#DA70D6'; // Verde-água (emigração) e azul (imigração)
+				const baseColor = isOutgoing ? '#483D8B' : '#DA70D6'; // Indigo (emigração) e magenta (imigração)
 				const strokeWidth = Math.max(2, Math.min(8, Math.sqrt(flow.count) * 2));
 				
 				// Criar gradiente único para cada fluxo
@@ -1103,12 +1103,12 @@
 	}
 
 	.toggle-switch.emigration {
-		border-color: #00bfa5;
+		border-color: #4B0082;
 		background: rgba(0, 191, 165, 0.3);
 	}
 
 	.toggle-switch.immigration {
-		border-color: #2196f3;
+		border-color: #FF00FF;
 		background: rgba(33, 150, 243, 0.3);
 	}
 
