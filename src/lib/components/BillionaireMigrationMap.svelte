@@ -655,7 +655,7 @@
 
 				// Determinar cor e largura baseado no fluxo e volume
 				const isOutgoing = flow.origin === selectedCountry;
-				const baseColor = isOutgoing ? '#00bfa5' : '#2196f3'; // Verde-água (emigração) e azul (imigração)
+				const baseColor = isOutgoing ? '#483D8B' : '#DA70D6'; // Verde-água (emigração) e azul (imigração)
 				const strokeWidth = Math.max(2, Math.min(8, Math.sqrt(flow.count) * 2));
 				
 				// Criar gradiente único para cada fluxo
