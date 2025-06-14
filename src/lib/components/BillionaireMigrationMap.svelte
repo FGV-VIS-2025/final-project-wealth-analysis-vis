@@ -181,7 +181,6 @@
 		'Saint Kitts and Nevis': 'Saint Kitts and Nevis'
 	};
 
-	// Paleta clássica de continentes (mais próxima de mapas educativos)
   const continentColors = {
 		'North America': '#2e7d32',  // verde escuro
 		'South America': '#ffa726',  // laranja
@@ -332,24 +331,27 @@
 		const svg = d3.select(svgElement);
 		svg.selectAll('*').remove();
 
-		// Dimensões otimizadas para aproveitar melhor a tela 1512x857
-		const width = 1300; // Maior para aproveitar a largura da tela
-		const height = 650; // Altura proporcional para aproveitar a tela
+		const width = 1300;
+		const height = 580;
+
+		// Adicionar margens para evitar corte das setas
+		const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+		const mapWidth = width - margin.left - margin.right;
+		const mapHeight = height - margin.top - margin.bottom;
 
 		// Projeção do mapa com escala maior
 		const projection = d3.geoNaturalEarth1()
-			.scale(200) // Escala maior para mapa mais detalhado
-			.translate([width / 2, height / 2]);
+			.scale(200)
+			.translate([mapWidth / 2 + margin.left, mapHeight / 2 + margin.top]);
 
 		const path = d3.geoPath().projection(projection);
 
 		// Contar bilionários por país de residência atual (não de cidadania)
-		// IMPORTANTE: country = onde moram ATUALMENTE, countryOfCitizenship = origem
 		const countryCounts = new Map();
 		countryCoordinates.clear();
 		
 		filteredData.forEach(d => {
-			const country = d.country; // País atual de residência
+			const country = d.country;
 			if (country && country !== 'Unknown') {
 				countryCounts.set(country, (countryCounts.get(country) || 0) + 1);
 				
@@ -362,10 +364,6 @@
         }
       }
     });
-
-
-
-
 
 		// Grupo principal
 		const g = svg.append('g');
@@ -580,37 +578,44 @@
 			return;
 		}
 		
-		// Usar a mesma projeção do mapa principal - ajustada
 		const width = 1300;
-		const height = 650;
+		const height = 580;
+		
+		// Usar as mesmas margens do mapa principal
+		const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+		const mapWidth = width - margin.left - margin.right;
+		const mapHeight = height - margin.top - margin.bottom;
+		
 		const projection = d3.geoNaturalEarth1()
 			.scale(200)
-			.translate([width / 2, height / 2]);
+			.translate([mapWidth / 2 + margin.left, mapHeight / 2 + margin.top]);
 
 		// Filtrar fluxos do país selecionado com base nos controles
-		// LÓGICA DE FILTRO:
-		// - EMIGRAÇÃO: flow.origin === selectedCountry (pessoas que SAÍRAM do país selecionado)
-		// - IMIGRAÇÃO: flow.destination === selectedCountry (pessoas que CHEGARAM ao país selecionado)
 		let relevantFlows = migrationFlows.filter(flow => {
-			const isEmigration = flow.origin === selectedCountry;      // Saiu deste país
-			const isImmigration = flow.destination === selectedCountry; // Chegou neste país
+			const isEmigration = flow.origin === selectedCountry;
+			const isImmigration = flow.destination === selectedCountry;
 			
-			// Aplicar filtros de exibição
 			if (isEmigration && !showEmigration) return false;
 			if (isImmigration && !showImmigration) return false;
 			
 			return isEmigration || isImmigration;
 		});
 
-
-
 		// Criar defs para gradientes e marcadores (já limpamos os fluxos acima)
 		const defs = svg.select('defs').empty() ? svg.append('defs') : svg.select('defs');
 		defs.selectAll('[id^="arrowhead"], [id^="flow-gradient"]').remove();
 
+		// Criar clipPath para evitar que elementos saiam dos limites
+		defs.append('clipPath')
+			.attr('id', 'map-clip')
+			.append('rect')
+			.attr('x', 0)
+			.attr('y', 0)
+			.attr('width', width)
+			.attr('height', height);
+
 		// Função para obter coordenadas do centro do país
 		function getCountryCenter(countryName) {
-			// Primeiro: buscar no GeoJSON pois tem coordenadas mais precisas
 			const feature = worldData.features.find(f => {
 				const geoName = f.properties.NAME || f.properties.name;
 				return isCountryMatch(geoName, countryName);
@@ -621,7 +626,6 @@
 				return projection(centroid);
 			}
 			
-			// Fallback: tentar coordenadas do dataset
 			const countryData = filteredData.find(d => 
 				d.country === countryName || d.countryOfCitizenship === countryName
 			);
@@ -646,16 +650,17 @@
 					.y(d => d[1])
 					.curve(d3.curveCardinal);
 
-				// Calcular curva com offset para evitar sobreposição
-				const offsetY = index % 2 === 0 ? -20 - (index * 5) : -40 - (index * 5);
+				// Calcular curva com offset limitado para evitar sobreposição e corte
+				const maxOffset = Math.min(50, mapHeight * 0.1); // Limitar offset baseado na altura
+				const offsetY = index % 2 === 0 ? -Math.min(20 + (index * 5), maxOffset) : -Math.min(40 + (index * 5), maxOffset);
 				const midX = (originCoords[0] + destCoords[0]) / 2;
-				const midY = (originCoords[1] + destCoords[1]) / 2 + offsetY;
+				const midY = Math.max(margin.top + 10, Math.min(height - margin.bottom - 10, (originCoords[1] + destCoords[1]) / 2 + offsetY));
 				
 				const pathData = line([originCoords, [midX, midY], destCoords]);
 
 				// Determinar cor e largura baseado no fluxo e volume
 				const isOutgoing = flow.origin === selectedCountry;
-				const baseColor = isOutgoing ? '#483D8B' : '#DA70D6'; // Indigo (emigração) e magenta (imigração)
+				const baseColor = isOutgoing ? '#483D8B' : '#DA70D6';
 				const strokeWidth = Math.max(2, Math.min(8, Math.sqrt(flow.count) * 2));
 				
 				// Criar gradiente único para cada fluxo
@@ -691,6 +696,7 @@
 					.attr('stroke-width', strokeWidth + 1)
 					.attr('opacity', 0.3)
 					.attr('transform', 'translate(1, 1)')
+					.attr('clip-path', 'url(#map-clip)')
 					.style('pointer-events', 'none');
 
 				// Criar linha principal
@@ -702,28 +708,11 @@
 					.attr('stroke-width', strokeWidth)
 					.attr('opacity', 0.9)
 					.attr('marker-end', `url(#arrowhead-${isOutgoing ? 'out' : 'in'})`)
+					.attr('clip-path', 'url(#map-clip)')
 					.style('cursor', 'pointer')
 					.on('mouseover', function(event) {
-						// Highlight da linha
-						d3.select(this)
-							.transition()
-							.duration(150)
-							.attr('opacity', 1)
-							.attr('stroke-width', strokeWidth + 1);
-						
-						// Mostrar tooltip com lógica correta
-						const isOutgoing = flow.origin === selectedCountry;
-						let directionText, directionDetail;
-						
-						if (isOutgoing) {
-							// Emigração: pessoas saíram do país selecionado
-							directionText = 'emigração';
-							directionDetail = `Saíram de ${flow.origin}`;
-						} else {
-							// Imigração: pessoas chegaram ao país selecionado  
-							directionText = 'imigração';
-							directionDetail = `Chegaram em ${flow.destination}`;
-						}
+						const directionText = isOutgoing ? 'emigração' : 'imigração';
+						const directionDetail = isOutgoing ? `Saíram de ${flow.origin}` : `Chegaram em ${flow.destination}`;
 						
 						const percentage = ((flow.count / filteredData.length) * 100).toFixed(1);
 						
@@ -742,13 +731,6 @@
 						};
 					})
 					.on('mouseout', function() {
-						// Remover highlight
-						d3.select(this)
-							.transition()
-							.duration(150)
-							.attr('opacity', 0.9)
-							.attr('stroke-width', strokeWidth);
-						
 						tooltip = { show: false, x: 0, y: 0, content: '' };
 					});
 
@@ -763,6 +745,7 @@
 					.attr('stroke', '#ffffff')
 					.attr('stroke-width', 1)
 					.attr('opacity', 0.9)
+					.attr('clip-path', 'url(#map-clip)')
 					.style('cursor', 'pointer')
 					.on('mouseover', function(event) {
 						d3.select(this)
@@ -802,10 +785,11 @@
 						.attr('y', midY + 2)
 						.attr('text-anchor', 'middle')
 						.attr('fill', '#ffffff')
-						.attr('font-size', '8px') // Reduzido de 9px
+						.attr('font-size', '8px')
 						.attr('font-weight', 'bold')
 						.style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)')
 						.style('pointer-events', 'none')
+						.attr('clip-path', 'url(#map-clip)')
 						.text(flow.count);
 				}
 			}
@@ -815,15 +799,15 @@
 		// Seta para emigração (verde-água)
 		const arrowOut = defs.append('marker')
 			.attr('id', 'arrowhead-out')
-			.attr('viewBox', '0 -5 8 10') // Reduzido
-			.attr('refX', 7) // Ajustado
+			.attr('viewBox', '0 -5 8 10')
+			.attr('refX', 7)
 			.attr('refY', 0)
-			.attr('markerWidth', 5) // Reduzido de 6
-			.attr('markerHeight', 5) // Reduzido de 6
+			.attr('markerWidth', 5)
+			.attr('markerHeight', 5)
 			.attr('orient', 'auto');
 		
 		arrowOut.append('path')
-			.attr('d', 'M0,-3L6,0L0,3L1,0Z') // Ajustado
+			.attr('d', 'M0,-3L6,0L0,3L1,0Z')
 			.attr('fill', '#00bfa5')
 			.attr('stroke', '#2c3e50')
 			.attr('stroke-width', 0.5);
@@ -831,15 +815,15 @@
 		// Seta para imigração (azul)
 		const arrowIn = defs.append('marker')
 			.attr('id', 'arrowhead-in')
-			.attr('viewBox', '0 -5 8 10') // Reduzido
-			.attr('refX', 7) // Ajustado
+			.attr('viewBox', '0 -5 8 10')
+			.attr('refX', 7)
 			.attr('refY', 0)
-			.attr('markerWidth', 5) // Reduzido de 6
-			.attr('markerHeight', 5) // Reduzido de 6
+			.attr('markerWidth', 5)
+			.attr('markerHeight', 5)
 			.attr('orient', 'auto');
 		
 		arrowIn.append('path')
-			.attr('d', 'M0,-3L6,0L0,3L1,0Z') // Ajustado
+			.attr('d', 'M0,-3L6,0L0,3L1,0Z')
 			.attr('fill', '#2196f3')
 			.attr('stroke', '#2c3e50')
 			.attr('stroke-width', 0.5);
@@ -889,7 +873,7 @@
 	</div>
     
 	<div class="map-wrapper">
-		<svg bind:this={svgElement} width="1300" height="650"></svg>
+		<svg bind:this={svgElement} width="1300" height="580"></svg>
 		
 		{#if tooltip.show}
 			<div 
@@ -921,7 +905,7 @@
 
 	.map-header {
 		text-align: center;
-		margin-bottom: 12px; /* Mais compacto */
+		margin-bottom: 4px;
 	}
 
 	.map-header h3 {
@@ -929,20 +913,18 @@
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
-		font-size: 18px; /* Menor para caber melhor */
+		font-size: 18px;
 		font-weight: 700;
-		margin: 0 0 6px 0; /* Mais compacto */
+		margin: 0 0 2px 0;
 		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.map-header p {
 		color: #cbd5e1;
-		font-size: 12px; /* Menor */
-		margin: 0;
+		font-size: 12px;
+		margin: 0 0 4px 0;
 		opacity: 0.9;
 	}
-
-
 
 	.map-wrapper {
 		position: relative;
@@ -969,35 +951,13 @@
 		transition: opacity 0.2s ease;
 	}
 
-
-
-	.selection-info {
-		display: none;
-	}
-
-	.selection-info p {
-		color: #e2e8f0;
-		margin: 3px 0; /* Mais compacto */
-		font-size: 11px; /* Menor */
-	}
-
-	.selection-info strong {
-		color: #ffd700;
-		font-weight: 600;
-	}
-
-	.selection-info small {
-		color: #94a3b8;
-		font-size: 9px; /* Menor para economizar espaço */
-	}
-
 	/* Controles organizados */
 	.controls-container {
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		gap: 16px; /* Menor espaçamento */
-		margin-top: 8px; /* Mais compacto */
+		gap: 16px;
+		margin-top: 2px;
 		flex-wrap: wrap;
 	}
 
@@ -1065,21 +1025,21 @@
 	.flow-controls {
 		display: flex;
 		justify-content: center;
-		gap: 12px; /* Reduzido de 16px */
+		gap: 12px;
 		flex-wrap: wrap;
 	}
 
 	.control-toggle {
 		display: flex;
 		align-items: center;
-		gap: 6px; /* Reduzido de 8px */
+		gap: 6px;
 		color: #e2e8f0;
-		font-size: 11px; /* Reduzido de 13px */
+		font-size: 11px;
 		font-weight: 500;
 		cursor: pointer;
-		padding: 4px 10px; /* Reduzido de 6px 12px */
+		padding: 4px 10px;
 		background: rgba(255, 215, 0, 0.1);
-		border-radius: 12px; /* Reduzido de 16px */
+		border-radius: 12px;
 		border: 1px solid rgba(255, 215, 0, 0.2);
 		transition: all 0.2s ease;
 	}
@@ -1094,9 +1054,9 @@
 	}
 
 	.toggle-switch {
-		width: 28px; /* Reduzido de 32px */
-		height: 14px; /* Reduzido de 16px */
-		border-radius: 7px; /* Ajustado */
+		width: 28px;
+		height: 14px;
+		border-radius: 7px;
 		border: 1px solid;
 		position: relative;
 		transition: all 0.2s ease;
@@ -1127,8 +1087,8 @@
 	.toggle-switch::before {
 		content: '';
 		position: absolute;
-		width: 10px; /* Reduzido de 12px */
-		height: 10px; /* Reduzido de 12px */
+		width: 10px;
+		height: 10px;
 		border-radius: 50%;
 		background: #ffffff;
 		top: 1px;
@@ -1138,7 +1098,7 @@
 	}
 
 	.control-toggle input:checked + .toggle-switch::before {
-		transform: translateX(14px); /* Ajustado de 16px */
+		transform: translateX(14px);
 	}
 
 	.continent-legend {

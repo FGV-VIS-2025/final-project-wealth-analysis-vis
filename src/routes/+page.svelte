@@ -31,11 +31,24 @@
                 .map(([key, value]) => ({ ageGroup: `${key}-${key+9}`, count: value }))
                 .sort((a,b) => parseInt(a.ageGroup) - parseInt(b.ageGroup));
 
-    // Processa os dados por país, pegando os 10 países com mais bilionários
-    countryData = d3.rollups(allData.filter(d => d.country), v => v.length, d => d.country)
-                    .map(([key, value]) => ({ country: key, count: value }))
+    // Processa os dados por país com melhor validação e limpeza
+    const validCountryData = allData.filter(d => d.country && d.country.trim() !== '');
+    
+    // Normaliza nomes de países para consistência
+    const normalizedData = validCountryData.map(d => ({
+      ...d,
+      country: d.country.trim() // Remove espaços extras
+    }));
+    
+    countryData = d3.rollups(normalizedData, v => v.length, d => d.country)
+                    .map(([key, value]) => ({ 
+                      country: key, 
+                      count: value,
+                      // Adiciona informações extras para debug
+                      totalWealth: d3.sum(normalizedData.filter(p => p.country === key), p => +p.finalWorth || 0)
+                    }))
                     .sort((a,b) => b.count - a.count)
-                    .slice(0, 10);
+                    .slice(0, 15); // Aumentado para 15 para incluir mais países
 
     // Processa os dados por gênero
     genderData = d3.rollups(allData.filter(d => d.gender), v => v.length, d => d.gender)
@@ -107,6 +120,12 @@
   <title>Desvendando o Perfil Bilionário</title>
 </svelte:head>
 
+<style>
+  :global(h1, h2, h3) {
+    color: #ffd700 !important;
+  }
+</style>
+
 <div id="scroll-telling-page" class="story-container">
   <section class="story-section full-page-section">
     <div class="text-content centered-content">
@@ -127,7 +146,7 @@
         A primeira característica dessa classe é a disparidade de patrimônio entre os sexos. Em geral, a proporção de bilionários self-made é semelhante, o que invalida a conjectura de que muitas mulheres, diferentemente dos homens, herdaram suas fortunas. 
       </p>
       <p>
-        Ademais, observamos que tanto os Estados Unidos quanto a China lideram os rankings para ambos os sexos, o que evidencia que há um tratamento relativamente equilibrado, especialmente na China, onde essa transformação teve início ainda no regime de Mao Tsé-Tung, com sua famosa frase: “As mulheres sustentam metade do céu.”
+        Ademais, observamos que tanto os Estados Unidos quanto a China lideram os rankings para ambos os sexos, o que evidencia que há um tratamento relativamente equilibrado, especialmente na China, onde essa transformação teve início ainda no regime de Mao Tsé-Tung, com sua famosa frase: "As mulheres sustentam metade do céu."
       </p>
     </div>
     <div class="chart-content right">

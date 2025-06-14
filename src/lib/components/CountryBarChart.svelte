@@ -1,12 +1,11 @@
 <script>
   export let data = []; 
   export let allData = []; // Dados completos para calcular riqueza total
-  import { onMount, afterUpdate } from 'svelte';
+  import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
   let svgElement, tooltip, filterRegion = 'all', filterIndustry = 'all';
   
-  // Ajustado para tela 918x857 - dimensões menores
   const margin = { top: 40, right: 20, bottom: 60, left: 120 }; 
   let width = 800, height = 400; // Reduzido para caber melhor
   let innerWidth = width - margin.left - margin.right;
@@ -35,6 +34,12 @@
   $: uniqueIndustries = allData && allData.length > 0 
     ? ['all', ...new Set(allData.map(d => d.industries).filter(Boolean)).values()].sort()
     : ['all'];
+
+  const maxVisibleIndustries = 8;
+  let showAllIndustries = false;
+  $: displayedIndustries = uniqueIndustries.slice(1); // remove "all"
+  $: visibleIndustries = showAllIndustries ? displayedIndustries : displayedIndustries.slice(0, maxVisibleIndustries);
+  $: hiddenCount = displayedIndustries.length - visibleIndustries.length;
 
   $: processedData = data.map(d => {
     // Calcular riqueza total para este país, filtrada por indústria se selecionada
@@ -326,13 +331,30 @@
       </div>
       
       <div class="control-group">
-        <label for="industry-select">Indústria:</label>
-        <select id="industry-select" bind:value={filterIndustry}>
-          <option value="all">Todas</option>
-          {#each uniqueIndustries.slice(1) as industry}
-            <option value={industry}>{industry}</option>
+        <label>Indústria:</label>
+        <div class="chips">
+          <button 
+            class="chip {filterIndustry === 'all' ? 'selected' : ''}"
+            on:click={() => filterIndustry = 'all'}
+          >
+            Todos
+          </button>
+
+          {#each visibleIndustries as industry}
+            <button 
+              class="chip {filterIndustry === industry ? 'selected' : ''}"
+              on:click={() => filterIndustry = industry}
+            >
+              {industry}
+            </button>
           {/each}
-        </select>
+
+          {#if !showAllIndustries && hiddenCount > 0}
+            <button class="chip" on:click={() => showAllIndustries = true}>
+              Mais +{hiddenCount}
+            </button>
+          {/if}
+        </div>
       </div>
     </div>
   </div>
@@ -461,9 +483,41 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .chip {
+    padding: 6px 14px;
+    background: rgba(0,0,0,0.4);
+    color: #e0e0e0;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 9999px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .chip:hover {
+    background: rgba(0,0,0,0.6);
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  .chip.selected {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+  }
+
   @media (max-width: 768px) {
     .chart-wrapper { 
-      padding: 12px; /* Reduzido de 15px */
+      padding: 12px; 
     }
     
     .filters-row {
@@ -472,7 +526,7 @@
     }
     
     .chart-container { 
-      height: 350px; /* Reduzido de 400px */
+      height: 350px;
     }
     
     .control-group select {
@@ -481,6 +535,10 @@
     }
     
     .legend-items {
+      justify-content: center;
+    }
+
+    .chips {
       justify-content: center;
     }
   }

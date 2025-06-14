@@ -32,7 +32,15 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 - Idealizei e implementei o tema de cores do trabalho (modificando em relação a v1 do trabalho por completo).
 
 ### Tomás
-- 
+- Criação do mapa do fluxo de imigração
+- Reajuste dos gráficos da página principal
+- Criação do gráfico de radar
+- Correção de bug de animação
+- Criação do storytelling
 
 ### Leonardo
 - 
+
+
+**Uso de IA:** 
+Utilizamos a ferramenta para gerar grande parte do CSS e HTML do site, com exceção notável da técnica de scrolltelling. Também foi utilizada na refatoração do código, visando melhorar sua legibilidade e manutenibilidade. Também empregamos a IA para ajudar na documentação.

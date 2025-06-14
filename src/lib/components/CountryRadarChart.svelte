@@ -1,5 +1,5 @@
 <script>
-  import { onMount, afterUpdate } from 'svelte';
+  import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
   export let data = [];
@@ -8,9 +8,9 @@
   let selectedCountries = new Set();
   let availableCountries = [];
   
-  const width = 380; // Reduzido para caber na tela 918x857
-  const height = 380; // Proporcionalmente menor
-  const margin = 60; // Margem menor
+  const width = 380;
+  const height = 380;
+  const margin = 60;
   const radius = Math.min(width, height) / 2 - margin;
   
   const indicators = [
@@ -31,10 +31,6 @@
   }
   
   onMount(() => {
-    drawChart();
-  });
-  
-  afterUpdate(() => {
     drawChart();
   });
   
@@ -115,11 +111,11 @@
         .attr('x1', 0).attr('y1', 0).attr('x2', x).attr('y2', y)
         .attr('stroke', '#666').attr('stroke-width', 2);
       
-      const labelRadius = radius + 25; // Menor para economizar espaço
+      const labelRadius = radius + 25;
       const labelX = Math.cos(angle) * labelRadius;
       const labelY = Math.sin(angle) * labelRadius;
       
-      // Ajustar ancoragem do texto baseado na posição
+
       let textAnchor = 'middle';
       if (labelX > 10) textAnchor = 'start';
       else if (labelX < -10) textAnchor = 'end';
@@ -127,9 +123,9 @@
       const text = g.append('text')
         .attr('x', labelX).attr('y', labelY)
         .attr('text-anchor', textAnchor).attr('dominant-baseline', 'middle')
-        .attr('fill', '#e0e0e0').attr('font-size', '10px').attr('font-weight', 'bold'); // Fonte menor
+        .attr('fill', '#e0e0e0').attr('font-size', '10px').attr('font-weight', 'bold');
       
-      // Quebrar texto em múltiplas linhas se necessário
+      
       const words = indicator.label.split(' ');
       if (words.length > 1 && indicator.label.length > 12) {
         text.append('tspan').attr('x', labelX).attr('dy', '-0.5em').text(words[0]);
@@ -155,7 +151,7 @@
       g.append('path')
         .datum(pathCoords).attr('d', d3.line())
         .attr('fill', color).attr('fill-opacity', 0.15)
-        .attr('stroke', color).attr('stroke-width', 2.5).attr('stroke-opacity', 0.9); // Linha mais fina
+        .attr('stroke', color).attr('stroke-width', 2.5).attr('stroke-opacity', 0.9);
       
       countryData.normalized.forEach((d, i) => {
         const angle = angleSlice * i - Math.PI / 2;
@@ -164,8 +160,8 @@
         const y = Math.sin(angle) * r;
         
         g.append('circle')
-          .attr('cx', x).attr('cy', y).attr('r', 3) // Pontos menores
-          .attr('fill', color).attr('stroke', '#fff').attr('stroke-width', 1.5) // Borda menor
+          .attr('cx', x).attr('cy', y).attr('r', 3)
+          .attr('fill', color).attr('stroke', '#fff').attr('stroke-width', 1.5)
           .style('cursor', 'pointer')
           .on('mouseover', function(event) {
             showTooltip(event, countryData.country, d);
@@ -178,7 +174,7 @@
       if (i > 0) {
         g.append('text')
           .attr('x', 8).attr('y', -r * radius + 4)
-          .attr('fill', '#888').attr('font-size', '9px').attr('font-weight', '500') // Menor
+          .attr('fill', '#888').attr('font-size', '9px').attr('font-weight', '500')
           .text(`${(r * 100).toFixed(0)}%`);
       }
     });
@@ -186,7 +182,7 @@
     g.append('text')
       .attr('x', 0).attr('y', 5)
       .attr('text-anchor', 'middle').attr('fill', '#666')
-      .attr('font-size', '10px').attr('font-weight', 'bold') // Menor
+      .attr('font-size', '10px').attr('font-weight', 'bold')
       .text('0%');
   }
   
@@ -324,11 +320,11 @@
   .radar-chart-container {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Menor espaçamento */
-    padding: 12px; /* Mais compacto */
+    gap: 10px; 
+    padding: 12px;
     background: transparent;
     border-radius: 6px;
-    max-width: 800px; /* Menor para caber na tela */
+    max-width: 800px; 
     margin: 0 auto;
   }
   
@@ -338,27 +334,27 @@
   
   .country-selector h4 {
     color: #ffd700;
-    margin: 0 0 8px 0; /* Margem menor */
-    font-size: 13px; /* Fonte menor */
+    margin: 0 0 8px 0; 
+    font-size: 13px;
     font-weight: 600;
   }
   
   .country-buttons {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); /* Botões menores */
-    gap: 5px; /* Espaçamento menor */
-    max-width: 550px; /* Largura menor */
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 5px;
+    max-width: 550px; 
     margin: 0 auto;
   }
   
   .country-button {
-    padding: 4px 6px; /* Mais compacto */
+    padding: 4px 6px;
     background: transparent;
     border: 2px solid #666;
-    border-radius: 3px; /* Menor */
+    border-radius: 3px;
     color: #e0e0e0;
     cursor: pointer;
-    font-size: 9px; /* Fonte menor */
+    font-size: 9px;
     font-weight: 500;
     transition: all 0.2s ease;
   }
@@ -377,7 +373,7 @@
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    gap: 15px; /* Espaçamento menor */
+    gap: 15px; 
     justify-content: center;
   }
   
@@ -385,7 +381,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px; /* Menor espaçamento */
+    gap: 8px;
     flex-shrink: 0;
   }
   
@@ -393,35 +389,35 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px; /* Menor espaçamento */
-    margin-top: 4px; /* Margem menor */
+    gap: 8px; 
+    margin-top: 4px; 
   }
 
   .country-item {
-    font-size: 10px; /* Fonte menor */
+    font-size: 10px; 
     font-weight: 600;
   }
   
     .legend {
     flex: 1;
-    max-width: 250px; /* Menor */
-    min-width: 220px; /* Menor */
+    max-width: 250px; 
+    min-width: 220px; 
   }
 
   .legend h4 {
     color: #ffd700;
-    margin: 0 0 6px 0; /* Margem menor */
-    font-size: 13px; /* Fonte menor */
+    margin: 0 0 6px 0; 
+    font-size: 13px; 
     text-align: left;
   }
   
   .normalization-note {
     background: rgba(255, 215, 0, 0.1);
     border: 1px solid #ffd700;
-    border-radius: 3px; /* Menor */
-    padding: 5px; /* Mais compacto */
-    margin-bottom: 8px; /* Margem menor */
-    font-size: 9px; /* Fonte menor */
+    border-radius: 3px;
+    padding: 5px; 
+    margin-bottom: 8px; 
+    font-size: 9px; 
     color: #ffd700;
     line-height: 1.2;
   }
@@ -433,11 +429,11 @@
     .legend-items {
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Menor espaçamento */
+    gap: 4px; 
   }
 
   .legend-item {
-    padding: 5px; /* Mais compacto */
+    padding: 5px; 
     background: rgba(255, 255, 255, 0.05);
     border-radius: 3px;
     border: 1px solid #444;
@@ -446,27 +442,27 @@
     .legend-label {
     color: #ffd700;
     font-weight: bold;
-    font-size: 10px; /* Menor */
+    font-size: 10px; 
     display: block;
-    margin-bottom: 1px; /* Margem menor */
+    margin-bottom: 1px; 
   }
 
   .legend-description {
     color: #c0c0c0;
-    font-size: 8px; /* Menor */
+    font-size: 8px;
     line-height: 1.2;
   }
   
-  @media (max-width: 920px) { /* Ajustado para tela 918x857 */
+  @media (max-width: 920px) { 
     .radar-chart-container {
-      padding: 10px; /* Mais compacto */
+      padding: 10px; 
       gap: 8px;
     }
     
     .chart-and-legend-wrapper {
       flex-direction: column;
       align-items: center;
-      gap: 10px; /* Menor espaçamento */
+      gap: 10px; 
     }
     
     .legend {
@@ -481,26 +477,26 @@
   
   @media (max-width: 600px) {
     .radar-chart-container {
-      padding: 8px; /* Mais compacto */
-      gap: 6px; /* Menor */
+      padding: 8px; 
+      gap: 6px; 
     }
     
     .country-buttons {
-      grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); /* Botões menores */
-      gap: 4px; /* Menor espaçamento */
+      grid-template-columns: repeat(auto-fit, minmax(85px, 1fr)); 
+      gap: 4px; 
     }
     
     .country-button {
-      font-size: 8px; /* Fonte menor */
-      padding: 3px 5px; /* Mais compacto */
+      font-size: 8px; 
+      padding: 3px 5px; 
     }
     
     .chart-and-legend-wrapper {
-      gap: 8px; /* Menor espaçamento */
+      gap: 8px;
     }
     
     .legend-item {
-      padding: 4px; /* Mais compacto */
+      padding: 4px; 
     }
   }
 </style> 

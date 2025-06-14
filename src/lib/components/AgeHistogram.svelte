@@ -1,6 +1,6 @@
 <script>
   export let data = []; // Agora espera dados brutos dos bilionários
-  import { onMount, afterUpdate } from 'svelte';
+  import { onMount } from 'svelte';
   import * as d3 from 'd3';
 
   let svgElement, tooltip;
@@ -25,7 +25,6 @@
     });
     
     industries = ['Todos', ...Array.from(industriesSet).sort()];
-    console.log('AgeHistogram - Industries extracted:', industries);
   }
 
   // Filtrar dados por indústria (similar ao mapa de migração)
@@ -45,8 +44,6 @@
       
       return industryMatch;
     });
-    
-    console.log('AgeHistogram - Filtered data:', filteredData.length, 'of', data.length);
   }
 
   // Agrupar dados filtrados por faixa etária
@@ -80,7 +77,6 @@
 
   // Inicializar quando os dados chegarem
   $: if (data.length > 0) {
-    console.log('AgeHistogram - Data received:', data.length, 'billionaires');
     extractFilters();
     updateFilteredData();
   }
@@ -94,10 +90,6 @@
   $: processedData = filteredData.length > 0 ? processAgeGroups() : [];
 
   $: totalBillionaires = d3.sum(processedData, d => d.count);
-  $: dataWithStats = processedData.map(d => ({
-    ...d,
-    percentage: totalBillionaires > 0 ? ((d.count / totalBillionaires) * 100).toFixed(1) : '0'
-  }));
 
   // Redesenhar quando processedData mudar
   $: if (processedData && svgElement) {
@@ -241,10 +233,11 @@
 
   function showTooltip(event, d) {
     if (!tooltip) return;
+    const percentage = totalBillionaires > 0 ? ((d.count / totalBillionaires) * 100).toFixed(1) : '0';
     const content = `<div style="background: rgba(0,0,0,0.9); padding: 12px; border-radius: 8px; color: white; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid ${d.color};">
       <div style="font-weight: bold; margin-bottom: 8px; color: ${d.color};">Faixa: ${d.ageGroup} anos</div>
       <div><strong>Bilionários:</strong> ${d.count.toLocaleString()}</div>
-      <div><strong>Porcentagem:</strong> ${d.percentage}%</div></div>`;
+      <div><strong>Porcentagem:</strong> ${percentage}%</div></div>`;
     tooltip.style('opacity', 1).html(content);
     updateTooltipPosition(event);
   }
@@ -281,8 +274,6 @@
       if (tooltip) tooltip.remove();
     };
   });
-
-  afterUpdate(() => { drawChart(); });
 </script>
 
 <div class="chart-wrapper">
@@ -493,17 +484,11 @@
       align-items: stretch;
     }
     
-    .control-group {
-      justify-content: center;
-    }
-    
+
     .filter-info {
       align-items: center;
       text-align: center;
     }
     
-    select {
-      min-width: 200px;
-    }
   }
 </style> 

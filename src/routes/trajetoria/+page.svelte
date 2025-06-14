@@ -157,7 +157,6 @@
       };
     }).sort((a, b) => b.value - a.value);
     
-    console.log('Gender data for donut chart:', result);
     return result;
   }
 
@@ -183,7 +182,6 @@
       };
     }).sort((a, b) => b.value - a.value);
     
-    console.log('Gender data for bar chart:', result);
     return result;
   }
 
@@ -281,11 +279,10 @@
     <div class="radar-text-content">
       <h2>Análise Comparativa: Por Que Alguns Países Atraem Bilionários?</h2>
       <p>
-        Este radar interativo compara múltiplos indicadores econômicos e sociais dos principais países concentradores de riqueza. Selecione até 4 países para comparar suas características em riqueza total, PIB, expectativa de vida, taxa de impostos e inflação.
-        Este radar interativo compara múltiplos indicadores econômicos e sociais dos principais países concentradores de riqueza. Selecione até 4 países para comparar suas características em riqueza total, PIB, expectativa de vida, taxa de impostos e inflação.
-
+        Este radar interativo compara múltiplos indicadores econômicos e sociais dos principais países 
+        concentradores de riqueza. <strong>Selecione</strong> até 4 países para comparar suas características.
+         Em nossa análise, os países com PIB alto e menores taxas de impostos (escala invertida no radar) são os que mais atraem bilionários.
       </p>
-
     </div>
     
     <div class="radar-container-wrapper">
