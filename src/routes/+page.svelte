@@ -124,6 +124,22 @@
   :global(h1, h2, h3) {
     color: #ffd700 !important;
   }
+
+  .scroll-hint-box {
+    margin: 32px auto 0 auto;
+    max-width: 480px;
+    background: #181818;
+    border-left: 5px solid #ffd700;
+    color: #ffd700;
+    padding: 18px 22px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    text-align: left;
+  }
 </style>
 
 <div id="scroll-telling-page" class="story-container">
@@ -136,6 +152,9 @@
       <p>
         Diante disso, torna-se evidente que a estrutura interna dessas camadas ultrarricas é complexa. Nosso objetivo, portanto, é traçar paralelos com o mundo que conhecemos para, por meio do contraste, compreendermos melhor a dinâmica desse segmento exclusivo da sociedade.
       </p>
+      <div class="scroll-hint-box">
+        <span><strong>Observação:</strong> Role para baixo para continuar explorando o site!</span>
+      </div>
     </div>
   </section>
 

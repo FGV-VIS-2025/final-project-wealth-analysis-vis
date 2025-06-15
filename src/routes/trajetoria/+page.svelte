@@ -251,7 +251,7 @@
   </section>
 
   <!-- Seção do Mapa de Migração de Bilionários -->
-  <section class="story-section full-width map-section-redesigned">
+  <section class="story-section full-width map-section-redesigned side-by-side-map">
     <div class="map-text-content-top">
       <h2>Fluxos Migratórios da Elite Global</h2>
       <p>
@@ -274,7 +274,7 @@
     </div>
   </section>
 
-  <!-- Nova Seção do Gráfico Radar -->
+  <!-- Seção do Gráfico Radar -->
   <section class="story-section full-width radar-section">
     <div class="radar-text-content">
       <h2>Análise Comparativa: Por Que Alguns Países Atraem Bilionários?</h2>
@@ -361,7 +361,7 @@
   .map-text-content-top {
     text-align: center;
     margin-bottom: 1.5rem;
-    max-width: 800px;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
   }
