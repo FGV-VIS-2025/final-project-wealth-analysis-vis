@@ -8,6 +8,9 @@
 ## Pôster
 link: https://docs.google.com/presentation/d/1ulw61zjcuxQmU7ULQI_qBHXlpE-da5uO/edit?slide=id.p1#slide=id.p1
 
+## Nova Imagem de Resumo
+![Resumo](static/imagem_de_resumo.png)
+
 ## Imagem do Resumo
 ![image](https://github.com/user-attachments/assets/97b7faa9-0f92-4b5e-8224-37f51025169f)
 
