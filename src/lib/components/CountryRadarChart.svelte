@@ -24,7 +24,7 @@
   let processedData = [];
   let scales = {};
   
-  const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f39c12', '#9b59b6', '#e74c3c', '#2ecc71'];
+  const colors = ['#ffd700', '#4ecdc4', '#a259ec', '#10b981', '#f39c12', '#9b59b6', '#e74c3c', '#2ecc71'];
   
   $: if (data.length > 0) {
     processData();
