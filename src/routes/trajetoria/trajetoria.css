@@ -853,8 +853,6 @@
   left: 100%;
 }
 
-
-
 .nav-btn-text {
   flex: 1;
   text-align: left;
@@ -920,8 +918,6 @@
     padding: 18px 20px;
     gap: 12px;
   }
-  
-
   
   .nav-btn-title {
     font-size: 1.1em;
