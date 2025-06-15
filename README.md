@@ -54,7 +54,8 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 - Customização visual do mapa de migração
 - Correção de bugs 
 - Elaboração do pôster
-- Criaçaõ da Imagem de Resumo
+- Criação da imagem de resumo
+- Correções do relatório
 
 
 **Uso de IA:** 
