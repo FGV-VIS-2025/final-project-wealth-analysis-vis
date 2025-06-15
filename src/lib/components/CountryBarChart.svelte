@@ -37,7 +37,7 @@
 
   const maxVisibleIndustries = 8;
   let showAllIndustries = false;
-  $: displayedIndustries = uniqueIndustries.slice(1); // remove "all"
+  $: displayedIndustries = uniqueIndustries.filter(ind => ind !== 'all'); // remove explicitamente 'all'
   $: visibleIndustries = showAllIndustries ? displayedIndustries : displayedIndustries.slice(0, maxVisibleIndustries);
   $: hiddenCount = displayedIndustries.length - visibleIndustries.length;
 
