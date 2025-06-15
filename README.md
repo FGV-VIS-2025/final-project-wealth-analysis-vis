@@ -5,6 +5,9 @@
 - Tomás Lira
 - Leonardo Alexandre
 
+## Pôster
+link: https://docs.google.com/presentation/d/1ulw61zjcuxQmU7ULQI_qBHXlpE-da5uO/edit?slide=id.p1#slide=id.p1
+
 ## Imagem do Resumo
 ![image](https://github.com/user-attachments/assets/97b7faa9-0f92-4b5e-8224-37f51025169f)
 
@@ -44,7 +47,13 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 - Criação do storytelling
 
 ### Leonardo
-- 
+- Criação do gráfico de gênero interativo
+- Construção da distribuição de bilionários interativa
+- Elaboração de distribuição por faixa etária interativa
+- Efeito de transição em gráficos
+- Customização visual do mapa de migração
+- Correção de bugs 
+- Elaboração do pôster
 
 
 **Uso de IA:** 
