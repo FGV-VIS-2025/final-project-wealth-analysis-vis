@@ -8,11 +8,8 @@
 ## Pôster
 link: https://docs.google.com/presentation/d/1ulw61zjcuxQmU7ULQI_qBHXlpE-da5uO/edit?slide=id.p1#slide=id.p1
 
-## Nova Imagem de Resumo
+## Imagem de Resumo
 ![Resumo](static/imagem_de_resumo.png)
-
-## Imagem do Resumo
-![image](https://github.com/user-attachments/assets/97b7faa9-0f92-4b5e-8224-37f51025169f)
 
 ## Resumo
 O projeto foi criado para atender à necessidade de ferramentas que não só apresentem dados sobre bilionários, mas que também permitam a exploração interativa e visual dessas informações. Seu principal objetivo é disponibilizar uma plataforma online que consolide e exiba dados do universo dos bilionários, possibilitando análises sobre como eles se distribuem por gênero, idade, país e residência, além de investigar seus fluxos migratórios e a conexão entre a concentração de bilionários e indicadores macroeconômicos.
@@ -57,6 +54,7 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 - Customização visual do mapa de migração
 - Correção de bugs 
 - Elaboração do pôster
+- Criaçaõ da Imagem de Resumo
 
 
 **Uso de IA:** 
