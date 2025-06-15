@@ -331,17 +331,17 @@
 		const svg = d3.select(svgElement);
 		svg.selectAll('*').remove();
 
-		const width = 1300;
-		const height = 580;
+		const width = 1150;
+		const height = 500;
 
 		// Adicionar margens para evitar corte das setas
-		const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+		const margin = { top: 15, right: 25, bottom: 15, left: 25 };
 		const mapWidth = width - margin.left - margin.right;
 		const mapHeight = height - margin.top - margin.bottom;
 
 		// Projeção do mapa com escala maior
 		const projection = d3.geoNaturalEarth1()
-			.scale(200)
+			.scale(175)
 			.translate([mapWidth / 2 + margin.left, mapHeight / 2 + margin.top]);
 
 		const path = d3.geoPath().projection(projection);
@@ -578,16 +578,16 @@
 			return;
 		}
 		
-		const width = 1300;
-		const height = 580;
+		const width = 1150;
+		const height = 500;
 		
 		// Usar as mesmas margens do mapa principal
-		const margin = { top: 20, right: 30, bottom: 20, left: 30 };
+		const margin = { top: 15, right: 25, bottom: 15, left: 25 };
 		const mapWidth = width - margin.left - margin.right;
 		const mapHeight = height - margin.top - margin.bottom;
 		
 		const projection = d3.geoNaturalEarth1()
-			.scale(200)
+			.scale(175)
 			.translate([mapWidth / 2 + margin.left, mapHeight / 2 + margin.top]);
 
 		// Filtrar fluxos do país selecionado com base nos controles
@@ -873,7 +873,7 @@
 	</div>
     
 	<div class="map-wrapper">
-		<svg bind:this={svgElement} width="1300" height="580"></svg>
+		<svg bind:this={svgElement} width="1150" height="500"></svg>
 		
 		{#if tooltip.show}
 			<div 
@@ -898,14 +898,14 @@
 
 <style>
 	.migration-map-container {
-		padding: 16px;
-		margin: 12px auto;
-		max-width: 1350px;
+		padding: 12px;
+		margin: 8px auto;
+		max-width: 1200px;
 	}
 
 	.map-header {
 		text-align: center;
-		margin-bottom: 4px;
+		margin-bottom: 8px;
 	}
 
 	.map-header h3 {
@@ -913,16 +913,16 @@
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 700;
-		margin: 0 0 2px 0;
+		margin: 0 0 4px 0;
 		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 	}
 
 	.map-header p {
 		color: #cbd5e1;
-		font-size: 12px;
-		margin: 0 0 4px 0;
+		font-size: 11px;
+		margin: 0 0 6px 0;
 		opacity: 0.9;
 	}
 
@@ -998,10 +998,10 @@
 	}
 
 	/* Responsividade otimizada para telas menores */
-	@media (max-width: 1400px) {
+	@media (max-width: 1250px) {
 		.migration-map-container {
 			max-width: 100%;
-			padding: 12px;
+			padding: 8px;
 		}
 		
 		.map-wrapper {
@@ -1009,16 +1009,16 @@
 		}
 		
 		.map-wrapper svg {
-			min-width: 1300px;
+			min-width: 1150px;
 		}
 		
 		.map-header h3 {
-			font-size: 20px;
+			font-size: 15px;
 		}
 
 		.controls-container {
 			flex-direction: column;
-			gap: 8px;
+			gap: 6px;
 		}
 	}
 
@@ -1104,25 +1104,25 @@
 	.continent-legend {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 18px 32px;
-		margin: 18px 0 0 0;
-		font-size: 14px;
+		gap: 15px 28px;
+		margin: 12px 0 0 0;
+		font-size: 13px;
 		color: #e0e0e0;
 		align-items: center;
 	}
 	.legend-color {
 		display: inline-block;
-		width: 18px;
-		height: 18px;
-		border-radius: 4px;
-		margin-right: 8px;
+		width: 16px;
+		height: 16px;
+		border-radius: 3px;
+		margin-right: 6px;
 		border: 2px solid #232323;
 		vertical-align: middle;
 	}
 
 	.legend-centered {
 		justify-content: center;
-		margin-top: 18px;
+		margin-top: 12px;
 		margin-bottom: 0;
 		width: 100%;
 	}
