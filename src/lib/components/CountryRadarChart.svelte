@@ -257,6 +257,7 @@
 </script>
 
 <div class="radar-chart-container">
+  <h3 class="radar-title">Comparativo de Indicadores por País</h3>
   <div class="country-selector">
     <h4>Selecionar Países (máximo 4):</h4>
     <div class="country-buttons">
@@ -328,12 +329,22 @@
     margin: 0 auto;
   }
   
+  .radar-title {
+    color: #ffd700;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 6px;
+    margin-top: 0;
+    letter-spacing: 0.01em;
+  }
+  
   .country-selector {
     text-align: center;
   }
   
   .country-selector h4 {
-    color: #ffd700;
+    color: #fff;
     margin: 0 0 8px 0; 
     font-size: 13px;
     font-weight: 600;
@@ -457,6 +468,11 @@
     .radar-chart-container {
       padding: 10px; 
       gap: 8px;
+    }
+    
+    .radar-title {
+      font-size: 1em;
+      margin-bottom: 6px;
     }
     
     .chart-and-legend-wrapper {
