@@ -6,13 +6,13 @@
 - Leonardo Alexandre
 
 ## Imagem do Resumo
-[Imagem Resumo.pdf](https://github.com/user-attachments/files/20745068/Imagem.Resumo.pdf)
+![image](https://github.com/user-attachments/assets/97b7faa9-0f92-4b5e-8224-37f51025169f)
 
 ## Resumo
 O projeto foi criado para atender à necessidade de ferramentas que não só apresentem dados sobre bilionários, mas que também permitam a exploração interativa e visual dessas informações. Seu principal objetivo é disponibilizar uma plataforma online que consolide e exiba dados do universo dos bilionários, possibilitando análises sobre como eles se distribuem por gênero, idade, país e residência, além de investigar seus fluxos migratórios e a conexão entre a concentração de bilionários e indicadores macroeconômicos.
 
-## Aritgo
-link: (colocar o link quando o relatorio estiver pronto)
+## Relatório
+link: https://www.overleaf.com/read/zkkrrpctztyn#294711
 
 ## Vídeo
 link: https://youtu.be/0IoVozYs-fc (colocar o link quando o vídeo estiver pronto, por enquanto vai o vídeo que já fizemos)
@@ -33,6 +33,8 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 - Ferramenta de busca de bilionários.
 - Refatorei a página inicial e a página de trajetoria para melhor leitura do código. Dividindo melhor o que cada módulo faz.
 - Idealizei e implementei o tema de cores do trabalho (modificando em relação a v1 do trabalho por completo).
+- Imagem do Resumo
+- Relatório
 
 ### Tomás
 - Criação do mapa do fluxo de imigração
