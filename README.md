@@ -36,8 +36,10 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 - Ferramenta de busca de bilionários.
 - Refatorei a página inicial e a página de trajetoria para melhor leitura do código. Dividindo melhor o que cada módulo faz.
 - Idealizei e implementei o tema de cores do trabalho (modificando em relação a v1 do trabalho por completo).
-- Imagem do Resumo
-- Relatório
+- Imagem do Resumo.
+- Relatório.
+- Introdução e página inicial do poster.
+- Fix de algumas sugestões dos colegas/professor e de alguns bugs.
 
 ### Tomás
 - Criação do mapa do fluxo de imigração
