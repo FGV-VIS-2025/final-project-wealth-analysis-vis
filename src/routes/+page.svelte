@@ -218,7 +218,7 @@
         <div class="navigation-section">
           <h3>Continue a Jornada</h3>
           <p>Para você mesmo responder os questionamentos levantados, preparamos algumas visualizações cativantes.</p>
-          <a href="{base}/trajetoria" class="nav-button-container enhanced-nav-button" on:click={navigateToTrajectory}>
+          <a href="{base}/trajetoria" class="nav-button-container enhanced-nav-button" on:click={navigateToTrajectory} data-sveltekit-preload-data="false" data-sveltekit-preload-code="false">
                          <div class="nav-content">
                <div class="nav-text-group">
                  <div class="nav-title">Explorar Fluxos Migratórios</div>
