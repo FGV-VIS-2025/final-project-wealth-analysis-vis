@@ -819,6 +819,7 @@
             </div>
           {/each}
         </div>
+        <p class="note"><b>Observação:</b> Consideramos "Não Self-Made" aqueles indivíduos cuja maior parte do patrimônio é proveniente de herança.</p>
       </div>
     {/if}
   {/if}
@@ -964,6 +965,18 @@
 
   .selfmade-button:hover {
     background: rgba(16, 185, 129, 0.3);
+  }
+
+  .note {
+    font-size: 12px;
+    color: #b0b0b0;
+    text-align: center;
+    margin-top: 20px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    font-style: italic;
+    line-height: 1.4;
   }
 
   @media (max-width: 768px) {
