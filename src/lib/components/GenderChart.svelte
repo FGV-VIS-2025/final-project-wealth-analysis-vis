@@ -146,7 +146,7 @@
       if (breakdownType === 'country') {
         titleText = `Porcentagem de Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} por País`;
       } else {
-        titleText = `Bilionários ${selectedGender === 'M' ? 'Masculinos' : 'Femininos'} - Self-Made vs Não Self-Made`;
+        titleText = `${selectedGender === 'M' ? 'Bilionários' : 'Bilionárias'} - Self-Made vs Não Self-Made`;
       }
     }
 
@@ -760,7 +760,7 @@
   {#if showBreakdown}
     <div class="back-controls">
       <button class="back-button" on:click={goBack}>
-        ← Voltar para Visão Geral
+        ← Voltar para Dist. Gênero
       </button>
     </div>
   {/if}
