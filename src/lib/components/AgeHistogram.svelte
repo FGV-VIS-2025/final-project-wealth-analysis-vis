@@ -161,13 +161,17 @@
       .attr('stroke-width', 1)
       .attr('rx', 4)
       .attr('ry', 4)
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'none');
 
     bars.transition()
       .duration(800)
       .delay((d, i) => i * 100)
       .attr('y', d => y(d.count))
-      .attr('height', d => innerHeight - y(d.count));
+      .attr('height', d => innerHeight - y(d.count))
+      .on('end', function() {
+        d3.select(this).style('pointer-events', 'auto');
+      });
 
     const labels = chartGroup.selectAll('.age-label')
       .data(processedData)
