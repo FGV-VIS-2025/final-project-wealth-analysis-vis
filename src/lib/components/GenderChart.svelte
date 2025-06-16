@@ -433,6 +433,15 @@
 
     svg.append('text')
       .attr('text-anchor', 'middle')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -60)
+      .attr('x', -innerHeight / 2)
+      .text('País')
+      .style('fill', '#e0e0e0')
+      .style('font-size', '14px');
+
+    svg.append('text')
+      .attr('text-anchor', 'middle')
       .attr('x', innerWidth / 2)
       .attr('y', innerHeight + 40)
       .text('Porcentagem (%)')
