@@ -116,10 +116,6 @@
 
 </script>
 
-<svelte:head>
-  <title>Desvendando o Perfil Bilionário</title>
-</svelte:head>
-
 <style>
   :global(h1, h2, h3) {
     color: #ffd700 !important;

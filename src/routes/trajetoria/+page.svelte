@@ -217,10 +217,6 @@
   $: currentViewData = views[currentViewIndex];
 </script>
 
-<svelte:head>
-  <title>Visão Geral dos Bilionários por País</title>
-</svelte:head>
-
 <div class="page-container story-container" id="trajetoria-page-container">
   <section class="story-section side-by-side">
     <div class="content-half left total-wealth-display">
