@@ -18,6 +18,7 @@
       finalWorth: b.finalWorth !== undefined ? +b.finalWorth : 0,
       industries: b.industries || b.source || 'N/A',
       country: b.country || 'N/A',
+      countryOfCitizenship: b.countryOfCitizenship || 'N/A',
       region: continentMap[b.country] || 'Outra', // Mapeia país para região, ou 'Outra' se não mapeado
       gender: b.gender || 'N/A',
       age: b.age ? +b.age : null
@@ -93,7 +94,8 @@
               <th>Patrimônio Líquido</th>
               <th>Indústria Principal</th>
               <th>Região</th>
-              <th>País</th>
+              <th>País de Moradia</th>
+              <th>País de Origem</th>
               <th>Idade</th>
               <th>Gênero</th>
             </tr>
@@ -106,6 +108,7 @@
                 <td>{b.industries}</td>
                 <td>{b.region}</td>
                 <td>{b.country}</td>
+                <td>{b.countryOfCitizenship || 'N/A'}</td>
                 <td>{b.age || 'N/A'}</td>
                 <td>{b.gender}</td>
               </tr>
