@@ -203,6 +203,9 @@
       <p>
         Por fim, vale salientar que, em geral, a faixa etária de pico de riqueza ocorre por volta dos 65 anos. No entanto, esse padrão não se mantém uniforme em todos os setores. Em particular, o setor de tecnologia se destaca por sua grande assimetria: é conhecido por gerar magnatas praticamente da noite para o dia.
       </p>
+      <p>
+        Se você ficou curioso sobre quem é esse bilionário de mais de 100 anos, complete sua jornada no site que você descobrirá.
+      </p>
     </div>
     <div class="chart-content right">
       {#if allData.length > 0}

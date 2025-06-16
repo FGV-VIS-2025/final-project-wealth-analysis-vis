@@ -8,6 +8,7 @@
     let selectedGender = ''; 
     let minNetWorthInput = '';
     let selectedRegion = ''; 
+    let minAgeInput = '';
   
     // Prepara os dados dos bilionários para exibição e filtragem
     // Adiciona uma chave única e formata alguns campos
@@ -18,7 +19,8 @@
       industries: b.industries || b.source || 'N/A',
       country: b.country || 'N/A',
       region: continentMap[b.country] || 'Outra', // Mapeia país para região, ou 'Outra' se não mapeado
-      gender: b.gender || 'N/A'
+      gender: b.gender || 'N/A',
+      age: b.age ? +b.age : null
     }));
   
     // Gera a lista de regiões disponíveis para o filtro, a partir do continentMap
@@ -45,7 +47,10 @@
         
         const regionMatch = selectedRegion === '' || b.region === selectedRegion;
         
-        return nameMatch && genderMatch && netWorthMatch && regionMatch;
+        const minAge = minAgeInput === '' || minAgeInput === null ? 0 : parseInt(minAgeInput, 10);
+        const ageMatch = minAge === 0 || (b.age && b.age >= minAge);
+
+        return nameMatch && genderMatch && netWorthMatch && regionMatch && ageMatch;
       })
       .sort((a, b) => b.finalWorth - a.finalWorth);
   
@@ -70,6 +75,7 @@
         {/each}
       </select>
       <input type="number" bind:value={minNetWorthInput} placeholder="Patrimônio Mín. (B)" class="filter-input networth-input" min="0" step="0.1"/>
+      <input type="number" bind:value={minAgeInput} placeholder="Idade Mín." class="filter-input networth-input" min="0"/>
       <select bind:value={selectedRegion} class="filter-select">
         <option value="">Todas as Regiões</option>
         {#each availableRegions as region (region)}
@@ -88,6 +94,7 @@
               <th>Indústria Principal</th>
               <th>Região</th>
               <th>País</th>
+              <th>Idade</th>
               <th>Gênero</th>
             </tr>
           </thead>
@@ -99,6 +106,7 @@
                 <td>{b.industries}</td>
                 <td>{b.region}</td>
                 <td>{b.country}</td>
+                <td>{b.age || 'N/A'}</td>
                 <td>{b.gender}</td>
               </tr>
             {/each}
