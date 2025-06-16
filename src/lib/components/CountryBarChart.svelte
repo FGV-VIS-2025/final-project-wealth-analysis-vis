@@ -12,7 +12,7 @@
   let innerHeight = height - margin.top - margin.bottom;
 
   const regionColors = {
-    'North America': '#6366f1',    
+    'North America': '#ef4444',    
     'Europe': '#06b6d4',           
     'Asia': '#f59e0b',             
     'South America': '#10b981',    

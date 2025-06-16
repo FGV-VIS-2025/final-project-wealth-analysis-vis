@@ -180,7 +180,7 @@
     }
   
     .billionaire-table-wrapper {
-      max-height: 330px;
+      height: 330px;
       overflow-y: auto;
       overflow-x: auto; 
       margin: 0 24px; 
