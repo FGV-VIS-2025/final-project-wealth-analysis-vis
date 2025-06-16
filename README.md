@@ -17,8 +17,11 @@ O projeto foi criado para atender à necessidade de ferramentas que não só apr
 ## Relatório
 link: https://www.overleaf.com/read/zkkrrpctztyn#294711
 
+## Teaser
+link: https://youtu.be/JMrvhyD4el8
+
 ## Vídeo
-link: https://youtu.be/0IoVozYs-fc (colocar o link quando o vídeo estiver pronto, por enquanto vai o vídeo que já fizemos)
+link: https://youtu.be/1ICyg6m-28M
 
 ## Instruções
 Basicamente, foi implementado um scrolltelling. Então para explorar todas as visualizações siga o caminho natural de scrolar para baixo que você passará para próxima visualização/insight.
