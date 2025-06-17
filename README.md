@@ -65,3 +65,15 @@ Basicamente, foi implementado um scrolltelling. Então para explorar todas as vi
 
 **Uso de IA:** 
 Utilizamos a ferramenta para gerar grande parte do CSS e HTML do site, com exceção notável da técnica de scrolltelling. Também foi utilizada na refatoração do código, visando melhorar sua legibilidade e manutenibilidade. Também empregamos a IA para ajudar na documentação.
+
+## Instruções de execução
+
+Clone este repositório e instale as dependências:
+
+npm install
+npm install -D svelte@4
+npm install -D @sveltejs/adapter-static@2
+
+Para iniciar o servidor de desenvolvimento e abrir automaticamente no navegador:
+
+npm run dev -- --open
