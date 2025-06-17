@@ -70,10 +70,12 @@ Utilizamos a ferramenta para gerar grande parte do CSS e HTML do site, com exceÃ
 
 Siga estas etapas para rodar o projeto:
 
-1. **Crie e ative um ambiente virtual (opcional, mas recomendado):**
+1. **Instale as dependÃªncias**
    ```cmd
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
+   npm install
+   npm install -D svelte@4
+   npm install -D @sveltejs/adapter-static@2
+   
 2. **Inicie o servidor de desenvolvimento e abra automaticamente no navegador:**
     ```cmd
     npm run dev -- --open
