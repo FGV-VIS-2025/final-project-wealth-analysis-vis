@@ -68,12 +68,12 @@ Utilizamos a ferramenta para gerar grande parte do CSS e HTML do site, com exce�
 
 ## Instruções de execução
 
-Clone este repositório e instale as dependências:
+Siga estas etapas para rodar o projeto:
 
-npm install
-npm install -D svelte@4
-npm install -D @sveltejs/adapter-static@2
-
-Para iniciar o servidor de desenvolvimento e abrir automaticamente no navegador:
-
-npm run dev -- --open
+1. **Crie e ative um ambiente virtual (opcional, mas recomendado):**
+   ```cmd
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+2. **Inicie o servidor de desenvolvimento e abra automaticamente no navegador:**
+    ```cmd
+    npm run dev -- --open
